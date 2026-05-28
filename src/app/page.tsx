@@ -109,14 +109,64 @@ export default function Chat() {
             messages.map(m => (
               m.role !== 'system' && (
                 <div key={m.id} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                  <div className={`max-w-[85%] rounded-2xl p-5 ${m.role === 'user' ? 'bg-blue-600 text-white shadow-blue-900/20 shadow-xl' : 'bg-slate-800 border border-slate-700 text-slate-200 shadow-xl'}`}>
+                  <div className={`max-w-[85%] rounded-2xl p-5 ${m.role === 'user' ? 'bg-blue-600 text-white shadow-blue-900/20 shadow-xl' : 'bg-slate-800 border border-slate-700 text-slate-200 shadow-xl w-full'}`}>
                     {m.role === 'assistant' && (
-                      <div className="flex items-center gap-2 mb-3 pb-3 border-b border-slate-700/50">
-                        <Bot className="w-4 h-4 text-blue-400" />
-                        <span className="text-xs font-semibold text-blue-400 uppercase tracking-wide">Analysis Ready</span>
+                      <div className="flex items-center gap-2 mb-4 pb-3 border-b border-slate-700/50">
+                        <Bot className="w-5 h-5 text-blue-400" />
+                        <span className="text-xs font-bold text-blue-400 uppercase tracking-widest">BuyBoxAgent Analysis</span>
                       </div>
                     )}
-                    <div className="whitespace-pre-wrap leading-relaxed text-sm md:text-base">{m.content}</div>
+                    
+                    {/* Render Tool Invocations Visually */}
+                    {m.toolInvocations?.map(tool => {
+                      if (tool.toolName === 'mercadoLibreTool' && 'result' in tool && tool.result?.success) {
+                        return (
+                          <div key={tool.toolCallId} className="mb-6 bg-slate-900/50 rounded-xl p-4 border border-slate-700/50">
+                            <div className="flex items-center gap-2 mb-4">
+                              <div className="w-8 h-8 rounded-full bg-emerald-500/10 flex items-center justify-center">
+                                <PackageSearch className="w-4 h-4 text-emerald-400" />
+                              </div>
+                              <div>
+                                <h4 className="text-sm font-bold text-emerald-400">Live Market Data Extracted</h4>
+                                <p className="text-xs text-slate-400">Powered by Bright Data Scraping Browser</p>
+                              </div>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                              {tool.result.data.slice(0, 6).map((product: any, idx: number) => (
+                                <a key={idx} href={product.link} target="_blank" rel="noreferrer" className="block bg-slate-800/80 hover:bg-slate-700 border border-slate-700 hover:border-emerald-500/50 transition-all rounded-lg p-3 group">
+                                  <div className="line-clamp-2 text-xs font-medium text-slate-200 mb-2 group-hover:text-emerald-300 transition-colors">{product.title}</div>
+                                  <div className="flex items-end justify-between">
+                                    <div>
+                                      <div className="text-lg font-bold text-white">{product.price}</div>
+                                      {product.originalPrice && <div className="text-[10px] text-slate-500 line-through">{product.originalPrice}</div>}
+                                    </div>
+                                    <div className="text-right flex flex-col items-end">
+                                      {product.isFull && (
+                                        <span className="bg-emerald-500/20 text-emerald-400 text-[9px] font-bold px-1.5 py-0.5 rounded uppercase flex items-center gap-1">
+                                          <Bot className="w-3 h-3" /> FULL
+                                        </span>
+                                      )}
+                                      {product.seller && <span className="text-[10px] text-slate-400 mt-1 truncate max-w-[80px]">By {product.seller}</span>}
+                                    </div>
+                                  </div>
+                                </a>
+                              ))}
+                            </div>
+                          </div>
+                        );
+                      }
+                      if (tool.toolName === 'mercadoLibreTool' && !('result' in tool)) {
+                         return (
+                           <div key={tool.toolCallId} className="mb-6 flex items-center gap-3 p-4 bg-blue-900/10 border border-blue-900/30 rounded-xl">
+                             <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                             <span className="text-sm text-blue-400 font-medium">Bright Data is unlocking and scraping real-time data...</span>
+                           </div>
+                         );
+                      }
+                      return null;
+                    })}
+
+                    <div className="whitespace-pre-wrap leading-relaxed text-sm text-slate-300">{m.content}</div>
                   </div>
                 </div>
               )
@@ -147,7 +197,7 @@ export default function Chat() {
             />
             <button
               type="submit"
-              disabled={isLoading || !input.trim()}
+              disabled={isLoading || !input?.trim()}
               className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-blue-600 text-white rounded-lg hover:bg-blue-500 disabled:opacity-50 disabled:hover:bg-blue-600 transition-colors shadow-lg"
             >
               <Send className="w-4 h-4" />
