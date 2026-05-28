@@ -41,14 +41,14 @@ graph TD
     classDef tools fill:#F59E0B,stroke:#D97706,stroke-width:2px,color:#fff
     classDef target fill:#EF4444,stroke:#DC2626,stroke-width:2px,color:#fff
 
-    User((User)):::user -->|Asks Question| Frontend[Next.js Frontend\n(Chat & Brain Panel)]:::ui
-    Frontend -->|Streams Request| API[Next.js API Route\n(Vercel AI SDK)]:::agent
+    User(("User")):::user -->|Asks Question| Frontend["Next.js Frontend<br>(Chat & Brain Panel)"]:::ui
+    Frontend -->|Streams Request| API["Next.js API Route<br>(Vercel AI SDK)"]:::agent
     
-    API <-->|Generates Plan & Calls Tools| LLM{Gemini 2.5 Flash}:::agent
-    API -->|Executes Tool| Tool[search_mercado_libre Tool]:::tools
+    API <-->|Generates Plan & Calls Tools| LLM{"Gemini 2.5 Flash"}:::agent
+    API -->|Executes Tool| Tool["search_mercado_libre Tool"]:::tools
     
-    Tool <-->|WebSocket Connection| BD[Bright Data\nScraping Browser]:::tools
-    BD <-->|Bypasses Anti-Bot| ML[(Mercado Libre)]:::target
+    Tool <-->|WebSocket Connection| BD["Bright Data<br>Scraping Browser"]:::tools
+    BD <-->|Bypasses Anti-Bot| ML[("Mercado Libre")]:::target
     
     Tool -->|Returns JSON Data| API
     API -->|Streams Final Answer| Frontend
