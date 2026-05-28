@@ -59,26 +59,28 @@ export async function scrapeMercadoLibre(searchQuery: string): Promise<ScrapedPr
       for (let i = 0; i < limit; i++) {
         const item = items[i];
         
-        // Extract Title
-        const titleElement = item.querySelector('h2.ui-search-item__title');
-        const title = titleElement ? titleElement.textContent?.trim() || 'Unknown Title' : 'Unknown Title';
+        // Extract Title (fallback through possible selectors)
+        const titleH2 = item.querySelector('h2');
+        const titlePoly = item.querySelector('.poly-component__title');
+        const imgEl = item.querySelector('img');
+        const title = titleH2?.textContent?.trim() || titlePoly?.textContent?.trim() || imgEl?.alt?.trim() || 'Unknown Title';
         
         // Extract Price
         const priceElement = item.querySelector('.andes-money-amount__fraction');
         let price = 0;
         if (priceElement && priceElement.textContent) {
-          // Remove commas and parse to integer
           price = parseInt(priceElement.textContent.replace(/,/g, ''), 10);
         }
         
         // Extract Shipping (Full)
-        // ML marks "Full" shipping with a specific SVG or text inside the shipping node
-        const fullShippingIcon = item.querySelector('svg.ui-search-icon--full');
-        const isFullShipping = fullShippingIcon !== null;
+        // Check for specific Full SVGs or text
+        const isFullShipping = item.innerHTML.includes('Full') || 
+                               item.innerHTML.includes('poly-icon-full') || 
+                               item.querySelector('svg.ui-search-icon--full') !== null;
         
         // Extract Link
-        const linkElement = item.querySelector('a.ui-search-link');
-        const link = linkElement ? (linkElement as HTMLAnchorElement).href : '';
+        const linkElement = item.querySelector('a'); // Get the primary link
+        const link = linkElement ? linkElement.href : '';
         
         results.push({
           title,
