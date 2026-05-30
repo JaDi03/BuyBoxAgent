@@ -388,9 +388,20 @@ export default function Chat() {
                     {(() => {
                       if (!m.toolInvocations || m.toolInvocations.length === 0) return null;
 
-                      const mlTool = m.toolInvocations.find(t => t.toolName === 'mercadoLibreTool');
-                      const serpTool = m.toolInvocations.find(t => t.toolName === 'serpTool');
-                      const reviewsTool = m.toolInvocations.find(t => t.toolName === 'reviewsTool');
+                      // Find the latest assistant message containing tool calls in the history
+                      const latestToolCallMsg = [...messages]
+                        .reverse()
+                        .find(msg => msg.role === 'assistant' && msg.toolInvocations && msg.toolInvocations.length > 0);
+
+                      if (m.id !== latestToolCallMsg?.id) {
+                        // Suppress older dashboards to prevent visual duplication in chat
+                        return null;
+                      }
+
+                      // Aggregate tool calls across all messages in history
+                      const mlTool = findMercadoLibreToolCall(m);
+                      const serpTool = findSerpToolCall(m);
+                      const reviewsTool = findReviewsToolCall(m);
 
                       const competitors = mlTool && 'result' in mlTool && mlTool.result?.success ? mlTool.result.data : [];
                       const serpResults = serpTool && 'result' in serpTool && serpTool.result?.success ? serpTool.result.data : null;
@@ -400,7 +411,11 @@ export default function Chat() {
                       const isSerpRunning = !!(serpTool && !('result' in serpTool));
                       const isReviewsRunning = !!(reviewsTool && !('result' in reviewsTool));
 
-                      const hasAnyResult = m.toolInvocations.some(t => 'result' in t);
+                      const hasAnyResult = !!(
+                        (mlTool && 'result' in mlTool) || 
+                        (serpTool && 'result' in serpTool) || 
+                        (reviewsTool && 'result' in reviewsTool)
+                      );
 
                       // If tools are running but none have completed yet, show standard terminal loader
                       if (!hasAnyResult) {
