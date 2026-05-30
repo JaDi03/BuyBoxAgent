@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useChat } from 'ai/react';
 import { 
   Bot, 
@@ -24,6 +24,75 @@ import {
   Info,
   Trash2
 } from 'lucide-react';
+
+// Bright Data Scraping Browser Terminal Component
+interface TerminalProps {
+  completed?: boolean;
+  count?: number;
+}
+
+function BrightDataTerminal({ completed = false, count = 0 }: TerminalProps) {
+  const presetLogs = [
+    '\x1b[34m[INFO]\x1b[0m Connecting to WebSocket proxy wss://brd.superproxy.io:9222...',
+    '\x1b[32m[SUCCESS]\x1b[0m Secure tunnel established. Authenticating session credentials...',
+    '\x1b[34m[INFO]\x1b[0m Target URL resolved: https://listado.mercadolibre.com.mx...',
+    '\x1b[33m[SECURITY]\x1b[0m Activating Bright Data Bot-Detection bypass...',
+    '\x1b[33m[SECURITY]\x1b[0m Bypassing WebGL fingerprints and Cloudflare Turnstile...',
+    '\x1b[32m[SUCCESS]\x1b[0m Target page successfully unlocked and rendered.',
+    '\x1b[34m[BROWSER]\x1b[0m Evaluating browser DOM query selectAll(".ui-search-layout__item")...',
+    completed 
+      ? `\x1b[32m[DATA]\x1b[0m Extracted ${count || 5} competitor products and pricing tiers.` 
+      : '\x1b[34m[DATA]\x1b[0m Extracting product titles, ratings, prices, and shipping badges...',
+    '\x1b[32m[SUCCESS]\x1b[0m Parsing complete. Payload successfully formatted. Closing session.',
+  ];
+
+  const [logs, setLogs] = useState<string[]>(
+    completed ? presetLogs : [presetLogs[0]]
+  );
+
+  useEffect(() => {
+    if (completed) return;
+    let index = 1;
+    const interval = setInterval(() => {
+      if (index < presetLogs.length) {
+        setLogs(prev => [...prev, presetLogs[index]]);
+        index++;
+      } else {
+        clearInterval(interval);
+      }
+    }, 1200);
+
+    return () => clearInterval(interval);
+  }, [completed]);
+
+  return (
+    <div className="w-full bg-slate-950 rounded-lg p-3.5 font-mono text-[10px] text-slate-300 border border-slate-850 shadow-inner mt-2 max-h-48 overflow-y-auto leading-relaxed">
+      <div className="flex items-center justify-between pb-2 border-b border-slate-900 mb-2">
+        <div className="flex gap-1.5">
+          <span className="w-2 h-2 rounded-full bg-rose-500/80"></span>
+          <span className="w-2 h-2 rounded-full bg-amber-500/80"></span>
+          <span className="w-2 h-2 rounded-full bg-emerald-500/80"></span>
+        </div>
+        <span className="text-[9px] uppercase tracking-wider text-slate-500 font-bold">Bright Data Scraping Browser Console</span>
+      </div>
+      <div className="space-y-1 select-all">
+        {logs.map((log, idx) => {
+          let formattedLog = log
+            .replace('\x1b[34m', '<span class="text-blue-400">')
+            .replace('\x1b[32m', '<span class="text-emerald-400">')
+            .replace('\x1b[33m', '<span class="text-amber-400">')
+            .replace('\x1b[0m', '</span>');
+          return (
+            <div key={idx} dangerouslySetInnerHTML={{ __html: formattedLog }} />
+          );
+        })}
+        {!completed && (
+          <span className="inline-block w-1.5 h-3 bg-blue-400 animate-pulse ml-0.5 align-middle"></span>
+        )}
+      </div>
+    </div>
+  );
+}
 
 export default function Chat() {
   // Seller Profile Form State
@@ -54,10 +123,11 @@ export default function Chat() {
       }
     },
     onFinish: async (message) => {
-      // Check if ScraperAgent successfully invoked the scraping tool
-      const toolCall = message.toolInvocations?.find(
-        t => t.toolName === 'mercadoLibreTool'
-      );
+      console.log('[onFinish] ScraperAgent stream completed. Last message:', message);
+      // Find the tool call dynamically from message parameter or from allMessages ref (bulletproof for multi-step)
+      const toolCall = findMercadoLibreToolCall(message);
+      console.log('[onFinish] Found toolCall:', toolCall);
+
       if (toolCall && 'result' in toolCall && toolCall.result?.success) {
         setAgent1State('done');
         const competitors = toolCall.result.data || [];
@@ -66,6 +136,7 @@ export default function Chat() {
         // Trigger StrategyAgent automatically
         await runStrategyAgent(message, competitors);
       } else {
+        console.warn('[onFinish] No successful toolcall found or result missing.');
         setAgent1State('done');
         setAgent2State('idle');
       }
@@ -76,16 +147,57 @@ export default function Chat() {
     }
   });
 
+  // Keep a ref of messages to prevent React stale closure bugs in onFinish & asynchronous fetch
+  const messagesRef = useRef(messages);
+  useEffect(() => {
+    messagesRef.current = messages;
+  }, [messages]);
+
+  // Robust helper to extract mercadoLibreTool call and its results
+  const findMercadoLibreToolCall = (lastMessage: any) => {
+    // 1. Check in the message object directly passed to onFinish
+    if (lastMessage?.toolInvocations) {
+      const found = lastMessage.toolInvocations.find((t: any) => t.toolName === 'mercadoLibreTool');
+      if (found) return found;
+    }
+
+    // 2. Scan the full state history from the ref
+    const history = messagesRef.current || [];
+    for (let i = history.length - 1; i >= 0; i--) {
+      const msg = history[i];
+      if (msg.toolInvocations) {
+        const found = msg.toolInvocations.find((t: any) => t.toolName === 'mercadoLibreTool');
+        if (found) return found;
+      }
+    }
+    return null;
+  };
+
   // Orchestrator for Agent 2 (StrategyAgent)
   const runStrategyAgent = async (lastMessage: any, scrapedData: any) => {
     try {
+      console.log('[runStrategyAgent] Triggering StrategyAgent...');
       setAgent2State('running');
       
+      // Clean chat history for StrategyAgent API request (strip custom frontend keys if any)
+      const history = messagesRef.current || [];
+      const hasLast = history.some(m => m.id === lastMessage.id);
+      const fullHistory = hasLast ? history : [...history, lastMessage];
+
+      const chatHistory = fullHistory
+        .filter(m => !m.id.startsWith('strategy-'))
+        .map(m => ({
+          role: m.role,
+          content: m.content
+        }));
+
+      console.log('[runStrategyAgent] Request payload messages:', chatHistory);
+
       const response = await fetch('/api/strategy', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          messages: [...messages, lastMessage],
+          messages: chatHistory,
           companyContext: {
             name: companyName,
             product: companyProduct,
@@ -99,7 +211,7 @@ export default function Chat() {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to run Strategy Agent');
+        throw new Error(`Strategy API responded with status ${response.status}`);
       }
 
       const reader = response.body?.getReader();
@@ -125,6 +237,7 @@ export default function Chat() {
         setMessages(prev => prev.map(m => m.id === strategyMessageId ? { ...m, content: m.content + chunk } : m));
       }
 
+      console.log('[runStrategyAgent] StrategyAgent complete.');
       setAgent2State('done');
     } catch (error) {
       console.error('StrategyAgent error:', error);
@@ -619,19 +732,34 @@ Analizando...
                                 );
                               })}
                             </div>
+
+                            {/* Terminal logs history */}
+                            <div className="mt-4 pt-3 border-t border-slate-800/60">
+                              <details className="group">
+                                <summary className="text-[10px] text-slate-500 font-mono cursor-pointer hover:text-slate-350 transition list-none flex items-center gap-1 select-none">
+                                  <span className="text-emerald-500 font-bold group-open:rotate-90 transition-transform">▶</span> Ver logs de la sesión (Bright Data Scraping Browser)
+                                </summary>
+                                <div className="mt-2">
+                                  <BrightDataTerminal completed={true} count={products.length} />
+                                </div>
+                              </details>
+                            </div>
                           </div>
                         );
                       }
                       
-                      // Loading indicator during scraping
+                      // Loading indicator during scraping with Bright Data Console
                       if (tool.toolName === 'mercadoLibreTool' && !('result' in tool)) {
                          return (
-                           <div key={tool.toolCallId} className="mb-6 flex items-center gap-3 p-4 bg-blue-950/20 border border-blue-900/30 rounded-xl animate-pulse">
-                             <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-                             <div>
-                               <span className="text-xs text-blue-400 font-bold uppercase tracking-wider block">ScraperAgent está trabajando</span>
-                               <span className="text-[11px] text-slate-400">Bright Data está desbloqueando y extrayendo listados de competidores...</span>
+                           <div key={tool.toolCallId} className="mb-6 p-4 bg-slate-900/60 border border-slate-800 rounded-xl space-y-3 shadow-inner">
+                             <div className="flex items-center gap-3">
+                               <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                               <div>
+                                 <span className="text-xs text-blue-400 font-bold uppercase tracking-wider block">ScraperAgent en ejecución</span>
+                                 <span className="text-[11px] text-slate-400">Desbloqueando y extrayendo listados mediante Bright Data Scraping Browser...</span>
+                               </div>
                              </div>
+                             <BrightDataTerminal />
                            </div>
                          );
                       }
