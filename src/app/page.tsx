@@ -24,6 +24,7 @@ import BrightDataTerminal from '@/components/BrightDataTerminal';
 import GoogleVisibility from '@/components/GoogleVisibility';
 import ReviewsAnalysis from '@/components/ReviewsAnalysis';
 import BrightDataDashboard from '@/components/BrightDataDashboard';
+import StrategyReport from '@/components/StrategyReport';
 
 export default function Chat() {
   // Seller Profile Form State
@@ -387,9 +388,20 @@ export default function Chat() {
                     {(() => {
                       if (!m.toolInvocations || m.toolInvocations.length === 0) return null;
 
-                      const mlTool = m.toolInvocations.find(t => t.toolName === 'mercadoLibreTool');
-                      const serpTool = m.toolInvocations.find(t => t.toolName === 'serpTool');
-                      const reviewsTool = m.toolInvocations.find(t => t.toolName === 'reviewsTool');
+                      // Find the latest assistant message containing tool calls in the history
+                      const latestToolCallMsg = [...messages]
+                        .reverse()
+                        .find(msg => msg.role === 'assistant' && msg.toolInvocations && msg.toolInvocations.length > 0);
+
+                      if (m.id !== latestToolCallMsg?.id) {
+                        // Suppress older dashboards to prevent visual duplication in chat
+                        return null;
+                      }
+
+                      // Aggregate tool calls across all messages in history
+                      const mlTool = findMercadoLibreToolCall(m);
+                      const serpTool = findSerpToolCall(m);
+                      const reviewsTool = findReviewsToolCall(m);
 
                       const competitors = mlTool && 'result' in mlTool && mlTool.result?.success ? mlTool.result.data : [];
                       const serpResults = serpTool && 'result' in serpTool && serpTool.result?.success ? serpTool.result.data : null;
@@ -399,7 +411,11 @@ export default function Chat() {
                       const isSerpRunning = !!(serpTool && !('result' in serpTool));
                       const isReviewsRunning = !!(reviewsTool && !('result' in reviewsTool));
 
-                      const hasAnyResult = m.toolInvocations.some(t => 'result' in t);
+                      const hasAnyResult = !!(
+                        (mlTool && 'result' in mlTool) || 
+                        (serpTool && 'result' in serpTool) || 
+                        (reviewsTool && 'result' in reviewsTool)
+                      );
 
                       // If tools are running but none have completed yet, show standard terminal loader
                       if (!hasAnyResult) {
@@ -426,7 +442,7 @@ export default function Chat() {
                         <div key="intelligence-hub" className="mb-6 space-y-4">
                           {/* Premium Tab Navigation */}
                           <div className="flex border-b border-slate-850 overflow-x-auto gap-1">
-                            <button
+                             <button
                               type="button"
                               onClick={() => setActiveTab('competitors')}
                               className={`px-3.5 py-2.5 text-xs font-bold border-b-2 transition-all flex items-center gap-1.5 whitespace-nowrap ${
@@ -436,7 +452,7 @@ export default function Chat() {
                               }`}
                             >
                               <BarChart2 className="w-3.5 h-3.5" />
-                              Competidores ({competitors.length})
+                              Competitors ({competitors.length})
                             </button>
                             
                             <button
@@ -463,7 +479,7 @@ export default function Chat() {
                               }`}
                             >
                               <MessageSquare className="w-3.5 h-3.5" />
-                              Opiniones
+                              Reviews
                               {isReviewsRunning && <span className="w-1.5 h-1.5 rounded-full bg-purple-400 animate-ping"></span>}
                             </button>
                             
@@ -519,8 +535,12 @@ export default function Chat() {
                       );
                     })()}
 
-                    <div className="whitespace-pre-wrap leading-relaxed text-sm text-slate-350 markdown-body">
-                      {m.content}
+                    <div className="leading-relaxed text-sm text-slate-350">
+                      {m.id.startsWith('strategy-') ? (
+                        <StrategyReport content={m.content} />
+                      ) : (
+                        <div className="whitespace-pre-wrap markdown-body">{m.content}</div>
+                      )}
                     </div>
                   </div>
                 </div>

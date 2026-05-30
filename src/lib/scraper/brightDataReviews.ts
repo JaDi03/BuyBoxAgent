@@ -59,6 +59,14 @@ export async function scrapeCompetitorReviews(productUrl: string, productName: s
     // Wait a brief period for client-side API requests to fetch reviews and mount on DOM
     await new Promise(resolve => setTimeout(resolve, 3500));
 
+    console.log(`[Reviews Scraper] Waiting for reviews elements to mount...`);
+    try {
+      await page.waitForSelector('.ui-review-capability-comments__comment, .ui-review-view__item, .ui-review-capability-comments__comment__content, .reviews-slide', { timeout: 10000 });
+      console.log(`[Reviews Scraper] Reviews elements mounted successfully.`);
+    } catch (e) {
+      console.warn(`[Reviews Scraper] Warning: Timeout waiting for reviews elements. Proceeding with page content.`);
+    }
+
     console.log(`[Reviews Scraper] Page ready. Parsing reviews section...`);
 
     // Extract reviews using common Mercado Libre selectors
