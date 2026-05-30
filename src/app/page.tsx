@@ -442,7 +442,7 @@ export default function Chat() {
                         <div key="intelligence-hub" className="mb-6 space-y-4">
                           {/* Premium Tab Navigation */}
                           <div className="flex border-b border-slate-850 overflow-x-auto gap-1">
-                            <button
+                             <button
                               type="button"
                               onClick={() => setActiveTab('competitors')}
                               className={`px-3.5 py-2.5 text-xs font-bold border-b-2 transition-all flex items-center gap-1.5 whitespace-nowrap ${
@@ -452,7 +452,7 @@ export default function Chat() {
                               }`}
                             >
                               <BarChart2 className="w-3.5 h-3.5" />
-                              Competidores ({competitors.length})
+                              Competitors ({competitors.length})
                             </button>
                             
                             <button
@@ -479,7 +479,7 @@ export default function Chat() {
                               }`}
                             >
                               <MessageSquare className="w-3.5 h-3.5" />
-                              Opiniones
+                              Reviews
                               {isReviewsRunning && <span className="w-1.5 h-1.5 rounded-full bg-purple-400 animate-ping"></span>}
                             </button>
                             

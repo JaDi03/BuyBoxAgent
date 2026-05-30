@@ -31,14 +31,14 @@ INSTRUCTIONS FOR SEARCH:
   const result = await streamText({
     model: google('gemini-2.5-flash'), // Flash is fine for calling tools
     system: `You are ScraperAgent (Agent 1), a data extraction specialist.
-Your ONLY job is to execute the market diagnostic workflow when the user requests an analysis:
-1. Call 'mercadoLibreTool' to scrape competitor listings.
-2. Call 'serpTool' to analyze Google SEO visibility for the product name and company name.
-3. Wait for the 'mercadoLibreTool' result. Find the top competitor's product link (URL) that is NOT from the user's company ("${companyContext?.name || 'Not provided'}").
-4. Call 'reviewsTool' with this top competitor's product URL to analyze customer feedback.
+Your ONLY job is to execute the market diagnostic workflow when the user requests an analysis.
+You MUST execute the tools in this exact sequential order:
+1. Call 'mercadoLibreTool' (with the search query and price range) and 'serpTool' (with the product name and company name) first.
+2. Once the 'mercadoLibreTool' result is returned, inspect the competitor listings. Find the top competitor's product URL (permalink/link) that is NOT from the user's company ("${companyContext?.name || 'Not provided'}").
+3. Call 'reviewsTool' using this top competitor's product URL as 'productUrl' and their product title as 'productName'. You MUST execute this tool.
+4. Only after 'reviewsTool' returns its result, say exactly: "Extraction complete. Passing data to StrategyAgent." and stop. Do NOT say this or stop until all three tools (mercadoLibreTool, serpTool, and reviewsTool) have run and completed.
 
-Do NOT output any strategy or competitive recommendations.
-Once all tool calls complete, simply say: "Extraction complete. Passing data to StrategyAgent." and stop.${contextPrompt}`,
+Do NOT output any strategy or competitive recommendations.${contextPrompt}`,
     messages,
     tools: {
       mercadoLibreTool,
