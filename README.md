@@ -57,34 +57,19 @@ graph LR
     classDef tool fill:#8B5CF6,stroke:#6D28D9,stroke-width:1px,color:#fff
     classDef data fill:#10B981,stroke:#047857,stroke-width:1px,color:#fff
 
-    Query["Search Target<br/>(e.g., Yeti 30oz)"]:::source --> MLT["mercadoLibreTool"]:::tool
+    Query["Search Target (e.g., Yeti 30oz)"]:::source --> MLT["mercadoLibreTool"]:::tool
     Query --> SRPT["serpTool"]:::tool
     
-    MLT -->|wss:// Scraping Browser| MLData[
-        <b>Mercado Libre México:</b><br/>
-        - Competitor pricing & discounts<br/>
-        - Envío FULL speed & logistics<br/>
-        - Ratings & official store flags
-    ]:::data
+    MLT -->|wss:// Scraping Browser| MLData["Mercado Libre Mexico:\n- Competitor pricing & discounts\n- Envío FULL speed & logistics\n- Ratings & official store flags"]:::data
 
-    SRPT -->|POST /request SERP API| SERPData[
-        <b>Google Search MX:</b><br/>
-        - Organic SEO ranking positions<br/>
-        - Ad placements & Shopping rank<br/>
-        - Competitor Google URLs
-    ]:::data
+    SRPT -->|POST /request SERP API| SERPData["Google Search MX:\n- Organic SEO ranking positions\n- Ad placements & Shopping rank\n- Competitor Google URLs"]:::data
 
     MLData -->|Top Competitor Link| RVT["reviewsTool"]:::tool
-    RVT -->|wss:// Scraping Browser| RVData[
-        <b>Review Intelligence:</b><br/>
-        - Customer raw comments<br/>
-        - Rating breakdown & dates<br/>
-        - Buyer complaints (vulnerabilities)
-    ]:::data
+    RVT -->|wss:// Scraping Browser| RVData["Review Intelligence:\n- Customer raw comments\n- Rating breakdown & dates\n- Buyer complaints (vulnerabilities)"]:::data
 ```
 
 <details>
-  <summary>🔄 Ver Diagrama de Secuencia Técnico Detallado (Pasos del Sistema)</summary>
+  <summary>🔄 View Detailed Technical Sequence Diagram (System Steps)</summary>
 
   ```mermaid
   sequenceDiagram
@@ -100,16 +85,16 @@ graph LR
       UI->>A1: Send Query & Context (POST /api/chat)
       
       Note over A1: Calls mercadoLibreTool (ML) & serpTool (Google)
-      A1->>BD: Conecta a Scraping Browser (Websocket) & SERP API (REST)
-      BD->>ML: Scrapea listado de productos & Google search rankings
-      ML-->>BD: Devuelve HTML renderizado & parsed SERP JSON
-      BD-->>A1: Entrega competidores (JSON) & rankings SEO (JSON)
+      A1->>BD: Connect to Scraping Browser (Websocket) & SERP API (REST)
+      BD->>ML: Scrapes product listings & Google search rankings
+      ML-->>BD: Returns fully rendered HTML & parsed SERP JSON
+      BD-->>A1: Returns competitor listings (JSON) & SEO rankings (JSON)
       
-      Note over A1: Identifica competidor líder en listado ML
-      A1->>BD: Ejecuta reviewsTool en URL del líder
-      BD->>ML: Navega, hace scroll y extrae comentarios de compradores
-      ML-->>BD: Devuelve opiniones cargadas dinámicamente
-      BD-->>A1: Entrega opiniones del competidor (JSON)
+      Note over A1: Identifies top competitor in ML listings
+      A1->>BD: Executes reviewsTool on competitor URL
+      BD->>ML: Navigates, scrolls, and extracts buyer comments
+      ML-->>BD: Returns dynamically loaded reviews
+      BD-->>A1: Returns competitor reviews (JSON)
       
       A1-->>UI: Stream: "Extraction complete. Passing data..."
       UI->>A2: Send Chat History + Profile + Consolidated JSON (POST /api/strategy)
