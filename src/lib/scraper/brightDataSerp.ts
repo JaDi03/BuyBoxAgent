@@ -44,7 +44,8 @@ export async function searchGoogleVisibility(productName: string, companyName: s
       },
       body: JSON.stringify({
         zone: zone,
-        url: searchUrl
+        url: searchUrl,
+        format: 'json'
       })
     });
 

@@ -35,18 +35,52 @@ export default function ScraperObservations({ messages }: ScraperObservationsPro
                   )}
                 </div>
                 
-                <div className="text-[11px] text-slate-300 font-mono bg-slate-950 p-2.5 rounded border border-slate-900 overflow-x-auto">
-                  <span className="text-slate-500">{'>'} Query: </span>
-                  <span className="text-emerald-400">"{toolInvocation.args.searchQuery}"</span>
-                  <br />
-                  <span className="text-slate-500">{'>'} Range: </span>
-                  <span className="text-emerald-400">{toolInvocation.args.minPrice}-{toolInvocation.args.maxPrice} MXN</span>
+                <div className="text-[11px] text-slate-350 font-mono bg-slate-950 p-2.5 rounded border border-slate-900 overflow-x-auto leading-relaxed">
+                  {toolInvocation.toolName === 'mercadoLibreTool' && (
+                    <>
+                      <span className="text-slate-550">{'>'} Query: </span>
+                      <span className="text-emerald-400">"{toolInvocation.args.searchQuery}"</span>
+                      <br />
+                      <span className="text-slate-550">{'>'} Range: </span>
+                      <span className="text-emerald-400">{toolInvocation.args.minPrice}-{toolInvocation.args.maxPrice} MXN</span>
+                    </>
+                  )}
+                  
+                  {toolInvocation.toolName === 'serpTool' && (
+                    <>
+                      <span className="text-slate-550">{'>'} SEO Target: </span>
+                      <span className="text-sky-450">"{toolInvocation.args.productName}"</span>
+                      <br />
+                      <span className="text-slate-550">{'>'} Client: </span>
+                      <span className="text-sky-405">"{toolInvocation.args.companyName}"</span>
+                    </>
+                  )}
+
+                  {toolInvocation.toolName === 'reviewsTool' && (
+                    <>
+                      <span className="text-slate-550">{'>'} Competitor: </span>
+                      <span className="text-purple-400">"{toolInvocation.args.productName}"</span>
+                      <br />
+                      <span className="text-slate-550">{'>'} Target Link: </span>
+                      <span className="text-purple-405 text-[10px] truncate block max-w-[200px]" title={toolInvocation.args.productUrl}>
+                        {toolInvocation.args.productUrl}
+                      </span>
+                    </>
+                  )}
                 </div>
 
                 {isFinished && (
                   <div className="text-[10px] text-slate-400 flex justify-between items-center pt-1 border-t border-slate-800">
                     <span>Status: <strong className={toolInvocation.result.success ? "text-emerald-400" : "text-rose-400"}>{toolInvocation.result.success ? "Complete" : "Error"}</strong></span>
-                    <span>Competitors: <strong>{toolInvocation.result.data?.length || 0}</strong></span>
+                    {toolInvocation.toolName === 'mercadoLibreTool' && (
+                      <span>Competitors: <strong>{toolInvocation.result.data?.length || 0}</strong></span>
+                    )}
+                    {toolInvocation.toolName === 'serpTool' && (
+                      <span>Google Rank: <strong>#{toolInvocation.result.data?.userProductRank || 'N/A'}</strong></span>
+                    )}
+                    {toolInvocation.toolName === 'reviewsTool' && (
+                      <span>Reviews: <strong>{toolInvocation.result.data?.reviews?.length || 0}</strong></span>
+                    )}
                   </div>
                 )}
               </div>

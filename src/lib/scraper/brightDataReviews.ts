@@ -48,9 +48,18 @@ export async function scrapeCompetitorReviews(productUrl: string, productName: s
     // Clean up URL to point to the reviews section if possible, or just visit the product page
     // Often, reviews are embedded directly on the main product details page.
     console.log(`[Reviews Scraper] Navigating to competitor product: ${productUrl}`);
-    await page.goto(productUrl, { waitUntil: 'domcontentloaded' });
+    await page.goto(productUrl, { waitUntil: 'networkidle2' });
 
-    console.log(`[Reviews Scraper] Page loaded. Parsing reviews section...`);
+    // Scroll down to trigger lazy loading of lower page content (questions/reviews)
+    console.log(`[Reviews Scraper] Scrolling down to trigger dynamic reviews loading...`);
+    await page.evaluate(async () => {
+      window.scrollTo(0, document.body.scrollHeight * 0.75);
+    });
+
+    // Wait a brief period for client-side API requests to fetch reviews and mount on DOM
+    await new Promise(resolve => setTimeout(resolve, 3500));
+
+    console.log(`[Reviews Scraper] Page ready. Parsing reviews section...`);
 
     // Extract reviews using common Mercado Libre selectors
     const extractedData = await page.evaluate(() => {
