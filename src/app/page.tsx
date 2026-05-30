@@ -21,8 +21,8 @@ import BrightDataTerminal from '@/components/BrightDataTerminal';
 export default function Chat() {
   // Seller Profile Form State
   const [profileExpanded, setProfileExpanded] = useState(true);
-  const [companyName, setCompanyName] = useState('Yeti Oficial México');
-  const [companyProduct, setCompanyProduct] = useState('Termo Yeti Rambler 30oz');
+  const [companyName, setCompanyName] = useState('Yeti Official Mexico');
+  const [companyProduct, setCompanyProduct] = useState('Yeti Rambler 30oz');
   const [companyPrice, setCompanyPrice] = useState('799');
   const [companyLevel, setCompanyLevel] = useState('MercadoLíder Platinum');
   const [companyShipping, setCompanyShipping] = useState('Mercado Envíos FULL');
@@ -183,7 +183,7 @@ export default function Chat() {
     setAgent2State('idle');
     append({
       role: 'user',
-      content: `Analiza el mercado para el producto "${companyProduct}"`
+      content: `Analyze the market for product "${companyProduct}"`
     });
   };
 
@@ -205,13 +205,13 @@ export default function Chat() {
         <div className="p-5 border-b border-slate-800 bg-slate-900/50 backdrop-blur flex justify-between items-center">
           <h2 className="text-lg font-bold flex items-center gap-2 bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent select-none">
             <BrainCircuit className="w-5 h-5 text-blue-400" />
-            Panel de Control
+            Control Panel
           </h2>
           <button 
             type="button"
             onClick={handleClearChat} 
             className="p-1.5 text-slate-500 hover:text-rose-400 hover:bg-slate-800/80 rounded-lg transition"
-            title="Limpiar Chat"
+            title="Clear Chat"
           >
             <Trash2 className="w-4 h-4" />
           </button>
@@ -277,9 +277,9 @@ export default function Chat() {
                 <Bot className="w-10 h-10 text-blue-400 relative z-10" />
               </div>
               <div className="space-y-2">
-                <h3 className="text-lg font-bold text-slate-200">Asistente de Competitividad</h3>
+                <h3 className="text-lg font-bold text-slate-200">Competitiveness Assistant</h3>
                 <p className="text-xs text-slate-400 leading-relaxed max-w-sm">
-                  Configura tu perfil de vendedor en el panel izquierdo y haz clic en "Iniciar Análisis de Mercado" para que los agentes extraigan y analicen la competencia en tiempo real.
+                  Configure your seller profile in the left panel and click "Start Market Analysis" to let agents extract and analyze the competition in real time.
                 </p>
               </div>
               
@@ -288,12 +288,12 @@ export default function Chat() {
                   <div className="flex items-start gap-2.5 text-left text-xs">
                     <Sparkles className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
                     <div>
-                      <h4 className="font-bold text-slate-300">¿Qué hace el flujo multi-agente?</h4>
+                      <h4 className="font-bold text-slate-300">What does the multi-agent flow do?</h4>
                       <p className="text-slate-400 text-[11px] mt-1">
-                        1. <strong>ScraperAgent</strong> usa Bright Data para extraer información detallada (vendedor, envíos, precio original, velocidad, etc.).
+                        1. <strong>ScraperAgent</strong> uses Bright Data to extract detailed information (seller, shipping model, original price, delivery speed, etc.).
                       </p>
                       <p className="text-slate-400 text-[11px] mt-0.5">
-                        2. <strong>StrategyAgent</strong> aplica un análisis cognitivo (Gemini 2.5 Pro) para encontrar brechas y estructurar tu plan de ataque.
+                        2. <strong>StrategyAgent</strong> applies a cognitive analysis (Gemini 2.5 Pro) to spot gaps and structure your strategic attack plan.
                       </p>
                     </div>
                   </div>
@@ -340,8 +340,8 @@ export default function Chat() {
                              <div className="flex items-center gap-3">
                                <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
                                <div>
-                                 <span className="text-xs text-blue-400 font-bold uppercase tracking-wider block">ScraperAgent en ejecución</span>
-                                 <span className="text-[11px] text-slate-400">Desbloqueando y extrayendo listados mediante Bright Data Scraping Browser...</span>
+                                 <span className="text-xs text-blue-400 font-bold uppercase tracking-wider block">ScraperAgent executing</span>
+                                 <span className="text-[11px] text-slate-400">Unlocking and extracting listings via Bright Data Scraping Browser...</span>
                                </div>
                              </div>
                              <BrightDataTerminal />
@@ -369,7 +369,7 @@ export default function Chat() {
                   <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
                   <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce"></div>
                 </div>
-                <span className="text-xs text-slate-400 font-medium">ScraperAgent está pensando...</span>
+                <span className="text-xs text-slate-400 font-medium">ScraperAgent is thinking...</span>
               </div>
             </div>
           )}
@@ -382,7 +382,7 @@ export default function Chat() {
                   <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
                   <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce"></div>
                 </div>
-                <span className="text-xs text-purple-400 font-medium">StrategyAgent está redactando el informe competitivo...</span>
+                <span className="text-xs text-purple-400 font-medium">StrategyAgent is generating strategic analysis report...</span>
               </div>
             </div>
           )}
@@ -394,7 +394,7 @@ export default function Chat() {
             <input
               className="w-full bg-slate-900 border border-slate-700/80 focus:border-slate-650 rounded-xl p-4 pr-12 focus:outline-none focus:ring-2 focus:ring-blue-500/25 transition-all text-slate-100 placeholder:text-slate-500 shadow-inner text-sm"
               value={input}
-              placeholder={companyProduct ? `Ej: Analiza a la competencia para "${companyProduct}"` : "Escribe tu consulta aquí..."}
+              placeholder={companyProduct ? `e.g., Analyze the competition for "${companyProduct}"` : "Type your query here..."}
               onChange={handleInputChange}
               disabled={isLoading || agent2State === 'running'}
             />
@@ -408,7 +408,7 @@ export default function Chat() {
           </form>
           <div className="max-w-4xl mx-auto mt-2 flex items-center gap-1.5 text-[10px] text-slate-500 px-1">
             <Info className="w-3.5 h-3.5" />
-            <span>Los datos son extraídos en tiempo real de Mercado Libre México usando el Scraping Browser de Bright Data.</span>
+            <span>Data is extracted in real-time from Mercado Libre Mexico using Bright Data's Scraping Browser.</span>
           </div>
         </div>
       </main>

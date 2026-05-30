@@ -17,8 +17,8 @@ export default function CompetitorCards({ products, companyName }: CompetitorCar
           <PackageSearch className="w-4.5 h-4.5 text-emerald-400" />
         </div>
         <div>
-          <h4 className="text-xs font-bold text-emerald-400 uppercase tracking-wide">Datos en tiempo real extraídos</h4>
-          <p className="text-[10px] text-slate-500">Filtrado inteligente mediante Bright Data browser</p>
+          <h4 className="text-xs font-bold text-emerald-400 uppercase tracking-wide">Real-Time Extracted Data</h4>
+          <p className="text-[10px] text-slate-500">Smart filtering via Bright Data Scraping Browser</p>
         </div>
       </div>
       
@@ -41,7 +41,7 @@ export default function CompetitorCards({ products, companyName }: CompetitorCar
               {/* User product indicator badge */}
               {isUserProduct && (
                 <div className="absolute top-0 right-0 bg-amber-500 text-slate-950 text-[9px] px-2 py-0.5 rounded-bl font-bold uppercase tracking-wider">
-                  Tu Producto
+                  Your Product
                 </div>
               )}
 
@@ -71,7 +71,7 @@ export default function CompetitorCards({ products, companyName }: CompetitorCar
                       </span>
                     )}
                     {product.bestSellerTag && (
-                      <span className="text-[8px] bg-amber-500/20 text-amber-400 border border-amber-500/30 px-1 py-0.2 rounded font-bold uppercase">MÁS VENDIDO</span>
+                      <span className="text-[8px] bg-amber-500/20 text-amber-400 border border-amber-500/30 px-1 py-0.2 rounded font-bold uppercase">BEST SELLER</span>
                     )}
                     {product.isSponsored && (
                       <span className="text-[8px] bg-blue-500/10 text-blue-400 border border-blue-500/20 px-1 py-0.2 rounded font-medium">Promo</span>
@@ -103,7 +103,7 @@ export default function CompetitorCards({ products, companyName }: CompetitorCar
                     )}
                     {product.seller && (
                       <span className="text-[9px] text-slate-500 font-medium truncate max-w-[100px]">
-                        Por: {product.seller}
+                        By: {product.seller}
                       </span>
                     )}
                   </div>
@@ -117,8 +117,8 @@ export default function CompetitorCards({ products, companyName }: CompetitorCar
       {/* Terminal logs history */}
       <div className="mt-4 pt-3 border-t border-slate-800/60">
         <details className="group">
-          <summary className="text-[10px] text-slate-500 font-mono cursor-pointer hover:text-slate-300 transition list-none flex items-center gap-1 select-none">
-            <span className="text-emerald-500 font-bold group-open:rotate-90 transition-transform">▶</span> Ver logs de la sesión (Bright Data Scraping Browser)
+          <summary className="text-[10px] text-slate-500 font-mono cursor-pointer hover:text-slate-350 transition list-none flex items-center gap-1 select-none">
+            <span className="text-emerald-500 font-bold group-open:rotate-90 transition-transform">▶</span> View session logs (Bright Data Scraping Browser)
           </summary>
           <div className="mt-2">
             <BrightDataTerminal completed={true} count={products.length} />

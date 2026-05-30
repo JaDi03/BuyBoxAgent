@@ -24,7 +24,7 @@ export default function OrchestratorMonitor({
     <div className="bg-slate-850/50 rounded-xl border border-slate-805 p-4 space-y-3.5 shadow-lg">
       <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5 select-none">
         <Activity className="w-4 h-4 text-emerald-400" />
-        Orquestador de Agentes
+        Agent Orchestrator
       </h3>
       
       <div className="space-y-3">
@@ -47,7 +47,7 @@ export default function OrchestratorMonitor({
           </div>
           <div>
             {agent1State === 'idle' && (
-              <span className="text-[10px] bg-slate-800 text-slate-400 px-2 py-0.5 rounded-full border border-slate-700">Espera</span>
+              <span className="text-[10px] bg-slate-800 text-slate-400 px-2 py-0.5 rounded-full border border-slate-700">Idle</span>
             )}
             {agent1State === 'running' && (
               <span className="text-[10px] bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded-full border border-blue-800 animate-pulse flex items-center gap-1">
@@ -58,7 +58,7 @@ export default function OrchestratorMonitor({
             {agent1State === 'done' && (
               <span className="text-[10px] bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded-full border border-emerald-800 flex items-center gap-1 font-semibold">
                 <CheckCircle2 className="w-3 h-3" />
-                Listo ({scrapedCompetitorsCount})
+                Ready ({scrapedCompetitorsCount})
               </span>
             )}
             {agent1State === 'error' && (
@@ -89,18 +89,18 @@ export default function OrchestratorMonitor({
           </div>
           <div>
             {agent2State === 'idle' && (
-              <span className="text-[10px] bg-slate-800 text-slate-400 px-2 py-0.5 rounded-full border border-slate-700">Espera</span>
+              <span className="text-[10px] bg-slate-800 text-slate-400 px-2 py-0.5 rounded-full border border-slate-700">Idle</span>
             )}
             {agent2State === 'running' && (
               <span className="text-[10px] bg-purple-500/20 text-purple-400 px-2 py-0.5 rounded-full border border-purple-800 animate-pulse flex items-center gap-1">
                 <span className="w-1.5 h-1.5 bg-purple-400 rounded-full animate-ping"></span>
-                Analizando...
+                Analyzing...
               </span>
             )}
             {agent2State === 'done' && (
               <span className="text-[10px] bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded-full border border-emerald-800 flex items-center gap-1 font-semibold">
                 <CheckCircle2 className="w-3 h-3" />
-                Completado
+                Complete
               </span>
             )}
             {agent2State === 'error' && (
