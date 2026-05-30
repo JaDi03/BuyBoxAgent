@@ -13,7 +13,7 @@ export default function ScraperObservations({ messages }: ScraperObservationsPro
 
   return (
     <div className="space-y-3.5">
-      <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 select-none">Observaciones del Scraper</h3>
+      <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 select-none">Scraper Observations</h3>
       
       <div className="space-y-3">
         {messages.map(m => (
@@ -45,8 +45,8 @@ export default function ScraperObservations({ messages }: ScraperObservationsPro
 
                 {isFinished && (
                   <div className="text-[10px] text-slate-400 flex justify-between items-center pt-1 border-t border-slate-800">
-                    <span>Status: <strong className={toolInvocation.result.success ? "text-emerald-400" : "text-rose-400"}>{toolInvocation.result.success ? "Completado" : "Error"}</strong></span>
-                    <span>Competidores: <strong>{toolInvocation.result.data?.length || 0}</strong></span>
+                    <span>Status: <strong className={toolInvocation.result.success ? "text-emerald-400" : "text-rose-400"}>{toolInvocation.result.success ? "Complete" : "Error"}</strong></span>
+                    <span>Competitors: <strong>{toolInvocation.result.data?.length || 0}</strong></span>
                   </div>
                 )}
               </div>
@@ -57,7 +57,7 @@ export default function ScraperObservations({ messages }: ScraperObservationsPro
         {!hasToolCalls && (
           <div className="text-center text-slate-600 py-6 text-xs flex flex-col items-center select-none">
             <Activity className="w-6 h-6 mb-2 opacity-15" />
-            Orquestador inactivo. Lanza un análisis para observar los logs.
+            Orchestrator inactive. Start an analysis to observe logs.
           </div>
         )}
       </div>

@@ -10,8 +10,8 @@ export async function POST(req: Request) {
   let contextPrompt = "";
   if (companyContext && companyContext.product) {
     const price = parseFloat(companyContext.price) || 0;
-    const minPrice = Math.floor(price * 0.7); // 30% menos
-    const maxPrice = Math.floor(price * 1.3); // 30% más
+    const minPrice = Math.floor(price * 0.7); // 30% less
+    const maxPrice = Math.floor(price * 1.3); // 30% more
 
     contextPrompt = `
 
@@ -31,12 +31,12 @@ INSTRUCTIONS FOR SEARCH:
     system: `You are ScraperAgent (Agent 1), a data extraction specialist.
 Your ONLY job is to call the 'mercadoLibreTool' when the user asks you to analyze a product.
 Do NOT output any strategy or analysis.
-Once the tool returns data, simply say: "Extracción completada. Pasando datos al Agente Estratega." and stop.${contextPrompt}`,
+Once the tool returns data, simply say: "Extraction complete. Passing data to StrategyAgent." and stop.${contextPrompt}`,
     messages,
     tools: {
       mercadoLibreTool,
     },
-    maxSteps: 2, // Allow it to call the tool and say "Extracción completada"
+    maxSteps: 2, // Allow it to call the tool and say "Extraction complete"
   });
 
   return result.toAIStreamResponse();

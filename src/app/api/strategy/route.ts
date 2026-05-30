@@ -6,7 +6,7 @@ export const maxDuration = 60;
 export async function POST(req: Request) {
   const { messages, companyContext, scrapedData } = await req.json();
 
-  // Construir contexto completo de la empresa
+  // Construct complete company context
   let contextPrompt = "";
   if (companyContext && companyContext.name) {
     contextPrompt = `
@@ -44,10 +44,10 @@ Your ONLY goal is to analyze the raw JSON market data provided to you and genera
 - If the scraped products are just accessories, point that out.
 
 === STRATEGY REPORT FORMAT ===
-1. **PERFIL DEL USUARIO**: First, explicitly state the user's company name, product, price, and all profile stats so they know you are analyzing THEIR specific situation.
-2. **ANÁLISIS DE COMPETIDORES**: Perform an unbiased comparison of their exact stats against the scraped competitors using the deep data provided (reviews, shipping speed, discounts, best seller tags).
-3. **BRECHAS IDENTIFICADAS**: Identify the REAL reasons why competitors might be ranking higher based solely on the extracted data.
-4. **ESTRATEGIA DE ATAQUE**: Give a highly actionable, brutal step-by-step strategy based on your factual findings.
+1. **USER PROFILE**: First, explicitly state the user's company name, product, price, and all profile stats so they know you are analyzing THEIR specific situation.
+2. **COMPETITOR ANALYSIS**: Perform an unbiased comparison of their exact stats against the scraped competitors using the deep data provided (reviews, shipping speed, discounts, best seller tags).
+3. **IDENTIFIED GAPS**: Identify the REAL reasons why competitors might be ranking higher based solely on the extracted data.
+4. **ATTACK STRATEGY**: Give a highly actionable, brutal step-by-step strategy based on your factual findings.
 
 ${contextPrompt}
 ${dataPrompt}`,
