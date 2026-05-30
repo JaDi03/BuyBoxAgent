@@ -8,7 +8,11 @@ import {
   Info, 
   Trash2,
   Sparkles,
-  BrainCircuit
+  BrainCircuit,
+  Search,
+  MessageSquare,
+  BarChart2,
+  Globe
 } from 'lucide-react';
 
 // Import modular components
@@ -17,6 +21,9 @@ import OrchestratorMonitor from '@/components/OrchestratorMonitor';
 import ScraperObservations from '@/components/ScraperObservations';
 import CompetitorCards from '@/components/CompetitorCards';
 import BrightDataTerminal from '@/components/BrightDataTerminal';
+import GoogleVisibility from '@/components/GoogleVisibility';
+import ReviewsAnalysis from '@/components/ReviewsAnalysis';
+import BrightDataDashboard from '@/components/BrightDataDashboard';
 
 export default function Chat() {
   // Seller Profile Form State
@@ -32,6 +39,11 @@ export default function Chat() {
   const [agent1State, setAgent1State] = useState<'idle' | 'running' | 'done' | 'error'>('idle');
   const [agent2State, setAgent2State] = useState<'idle' | 'running' | 'done' | 'error'>('idle');
   const [scrapedCompetitorsCount, setScrapedCompetitorsCount] = useState<number>(0);
+  
+  // Bright Data New Integrated States
+  const [serpData, setSerpData] = useState<any>(null);
+  const [reviewsData, setReviewsData] = useState<any>(null);
+  const [activeTab, setActiveTab] = useState<'competitors' | 'seo' | 'reviews' | 'dashboard'>('competitors');
 
   // useChat initialization for Agent 1 (ScraperAgent)
   const { messages, input, handleInputChange, handleSubmit, isLoading, setMessages, append } = useChat({
@@ -48,20 +60,31 @@ export default function Chat() {
     },
     onFinish: async (message) => {
       console.log('[onFinish] ScraperAgent stream completed. Last message:', message);
-      // Find the tool call dynamically from message parameter or from allMessages ref (bulletproof for multi-step)
-      const toolCall = findMercadoLibreToolCall(message);
-      console.log('[onFinish] Found toolCall:', toolCall);
+      
+      // Extract results from all completed tools dynamically
+      const mlCall = findMercadoLibreToolCall(message);
+      const serpCall = findSerpToolCall(message);
+      const reviewsCall = findReviewsToolCall(message);
+      
+      console.log('[onFinish] Found mlCall:', mlCall);
+      console.log('[onFinish] Found serpCall:', serpCall);
+      console.log('[onFinish] Found reviewsCall:', reviewsCall);
 
-      if (toolCall && 'result' in toolCall && toolCall.result?.success) {
-        setAgent1State('done');
-        const competitors = toolCall.result.data || [];
-        setScrapedCompetitorsCount(competitors.length);
-        
-        // Trigger StrategyAgent automatically
-        await runStrategyAgent(message, competitors);
+      const competitors = mlCall && 'result' in mlCall && mlCall.result?.success ? mlCall.result.data : [];
+      const serpResults = serpCall && 'result' in serpCall && serpCall.result?.success ? serpCall.result.data : null;
+      const reviewsResults = reviewsCall && 'result' in reviewsCall && reviewsCall.result?.success ? reviewsCall.result.data : null;
+
+      setScrapedCompetitorsCount(competitors.length);
+      if (serpResults) setSerpData(serpResults);
+      if (reviewsResults) setReviewsData(reviewsResults);
+
+      setAgent1State('done');
+      
+      if (competitors.length > 0) {
+        // Trigger StrategyAgent automatically and pass all scraped feeds
+        await runStrategyAgent(message, competitors, serpResults, reviewsResults);
       } else {
-        console.warn('[onFinish] No successful toolcall found or result missing.');
-        setAgent1State('done');
+        console.warn('[onFinish] No successful market listings retrieved. StrategyAgent standby.');
         setAgent2State('idle');
       }
     },
@@ -79,13 +102,10 @@ export default function Chat() {
 
   // Robust helper to extract mercadoLibreTool call and its results
   const findMercadoLibreToolCall = (lastMessage: any) => {
-    // 1. Check in the message object directly passed to onFinish
     if (lastMessage?.toolInvocations) {
       const found = lastMessage.toolInvocations.find((t: any) => t.toolName === 'mercadoLibreTool');
       if (found) return found;
     }
-
-    // 2. Scan the full state history from the ref
     const history = messagesRef.current || [];
     for (let i = history.length - 1; i >= 0; i--) {
       const msg = history[i];
@@ -97,13 +117,47 @@ export default function Chat() {
     return null;
   };
 
+  // Robust helper to extract serpTool call and its results
+  const findSerpToolCall = (lastMessage: any) => {
+    if (lastMessage?.toolInvocations) {
+      const found = lastMessage.toolInvocations.find((t: any) => t.toolName === 'serpTool');
+      if (found) return found;
+    }
+    const history = messagesRef.current || [];
+    for (let i = history.length - 1; i >= 0; i--) {
+      const msg = history[i];
+      if (msg.toolInvocations) {
+        const found = msg.toolInvocations.find((t: any) => t.toolName === 'serpTool');
+        if (found) return found;
+      }
+    }
+    return null;
+  };
+
+  // Robust helper to extract reviewsTool call and its results
+  const findReviewsToolCall = (lastMessage: any) => {
+    if (lastMessage?.toolInvocations) {
+      const found = lastMessage.toolInvocations.find((t: any) => t.toolName === 'reviewsTool');
+      if (found) return found;
+    }
+    const history = messagesRef.current || [];
+    for (let i = history.length - 1; i >= 0; i--) {
+      const msg = history[i];
+      if (msg.toolInvocations) {
+        const found = msg.toolInvocations.find((t: any) => t.toolName === 'reviewsTool');
+        if (found) return found;
+      }
+    }
+    return null;
+  };
+
   // Orchestrator for Agent 2 (StrategyAgent)
-  const runStrategyAgent = async (lastMessage: any, scrapedData: any) => {
+  const runStrategyAgent = async (lastMessage: any, scrapedData: any, serpDataInput: any, reviewsDataInput: any) => {
     try {
       console.log('[runStrategyAgent] Triggering StrategyAgent...');
       setAgent2State('running');
       
-      // Clean chat history for StrategyAgent API request (strip custom frontend keys if any)
+      // Clean chat history for StrategyAgent API request
       const history = messagesRef.current || [];
       const hasLast = history.some(m => m.id === lastMessage.id);
       const fullHistory = hasLast ? history : [...history, lastMessage];
@@ -115,7 +169,7 @@ export default function Chat() {
           content: m.content
         }));
 
-      console.log('[runStrategyAgent] Request payload messages:', chatHistory);
+      console.log('[runStrategyAgent] Request payload to strategy endpoint:', { chatHistory, scrapedData, serpDataInput, reviewsDataInput });
 
       const response = await fetch('/api/strategy', {
         method: 'POST',
@@ -130,7 +184,9 @@ export default function Chat() {
             shipping: companyShipping,
             warranty: companyWarranty,
           },
-          scrapedData
+          scrapedData,
+          serpData: serpDataInput,
+          reviewsData: reviewsDataInput
         })
       });
 
@@ -173,6 +229,8 @@ export default function Chat() {
   const handleFormSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     setAgent1State('running');
     setAgent2State('idle');
+    setSerpData(null);
+    setReviewsData(null);
     handleSubmit(e);
   };
 
@@ -181,6 +239,8 @@ export default function Chat() {
     if (!companyProduct.trim()) return;
     setAgent1State('running');
     setAgent2State('idle');
+    setSerpData(null);
+    setReviewsData(null);
     append({
       role: 'user',
       content: `Analyze the market for product "${companyProduct}"`
@@ -193,6 +253,9 @@ export default function Chat() {
     setAgent1State('idle');
     setAgent2State('idle');
     setScrapedCompetitorsCount(0);
+    setSerpData(null);
+    setReviewsData(null);
+    setActiveTab('competitors');
   };
 
   return (
@@ -321,35 +384,140 @@ export default function Chat() {
                     )}
                     
                     {/* Render Tool Invocations visually with premium details */}
-                    {m.toolInvocations?.map(tool => {
-                      if (tool.toolName === 'mercadoLibreTool' && 'result' in tool && tool.result?.success) {
-                        const products = tool.result.data || [];
+                    {(() => {
+                      if (!m.toolInvocations || m.toolInvocations.length === 0) return null;
+
+                      const mlTool = m.toolInvocations.find(t => t.toolName === 'mercadoLibreTool');
+                      const serpTool = m.toolInvocations.find(t => t.toolName === 'serpTool');
+                      const reviewsTool = m.toolInvocations.find(t => t.toolName === 'reviewsTool');
+
+                      const competitors = mlTool && 'result' in mlTool && mlTool.result?.success ? mlTool.result.data : [];
+                      const serpResults = serpTool && 'result' in serpTool && serpTool.result?.success ? serpTool.result.data : null;
+                      const reviewsResults = reviewsTool && 'result' in reviewsTool && reviewsTool.result?.success ? reviewsTool.result.data : null;
+
+                      const isMlRunning = !!(mlTool && !('result' in mlTool));
+                      const isSerpRunning = !!(serpTool && !('result' in serpTool));
+                      const isReviewsRunning = !!(reviewsTool && !('result' in reviewsTool));
+
+                      const hasAnyResult = m.toolInvocations.some(t => 'result' in t);
+
+                      // If tools are running but none have completed yet, show standard terminal loader
+                      if (!hasAnyResult) {
+                        let loadingMsg = "Unlocking and extracting listings via Bright Data Scraping Browser...";
+                        if (isSerpRunning) loadingMsg = "Tracking organic search rankings via Bright Data SERP API...";
+                        if (isReviewsRunning) loadingMsg = "Extracting competitor reviews via Bright Data Scraping Browser...";
+
                         return (
-                          <CompetitorCards 
-                            key={tool.toolCallId}
-                            products={products}
-                            companyName={companyName}
-                          />
+                          <div key="loader-panel" className="mb-6 p-4 bg-slate-900/60 border border-slate-800 rounded-xl space-y-3 shadow-inner">
+                            <div className="flex items-center gap-3">
+                              <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                              <div>
+                                <span className="text-xs text-blue-400 font-bold uppercase tracking-wider block">ScraperAgent executing</span>
+                                <span className="text-[11px] text-slate-400">{loadingMsg}</span>
+                              </div>
+                            </div>
+                            <BrightDataTerminal />
+                          </div>
                         );
                       }
-                      
-                      // Loading indicator during scraping with Bright Data Console
-                      if (tool.toolName === 'mercadoLibreTool' && !('result' in tool)) {
-                         return (
-                           <div key={tool.toolCallId} className="mb-6 p-4 bg-slate-900/60 border border-slate-800 rounded-xl space-y-3 shadow-inner">
-                             <div className="flex items-center gap-3">
-                               <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-                               <div>
-                                 <span className="text-xs text-blue-400 font-bold uppercase tracking-wider block">ScraperAgent executing</span>
-                                 <span className="text-[11px] text-slate-400">Unlocking and extracting listings via Bright Data Scraping Browser...</span>
-                               </div>
-                             </div>
-                             <BrightDataTerminal />
-                           </div>
-                         );
-                      }
-                      return null;
-                    })}
+
+                      // If at least one tool completed, render the multi-product Intelligence Hub
+                      return (
+                        <div key="intelligence-hub" className="mb-6 space-y-4">
+                          {/* Premium Tab Navigation */}
+                          <div className="flex border-b border-slate-850 overflow-x-auto gap-1">
+                            <button
+                              type="button"
+                              onClick={() => setActiveTab('competitors')}
+                              className={`px-3.5 py-2.5 text-xs font-bold border-b-2 transition-all flex items-center gap-1.5 whitespace-nowrap ${
+                                activeTab === 'competitors' 
+                                  ? 'border-blue-500 text-blue-400' 
+                                  : 'border-transparent text-slate-450 hover:text-slate-200'
+                              }`}
+                            >
+                              <BarChart2 className="w-3.5 h-3.5" />
+                              Competidores ({competitors.length})
+                            </button>
+                            
+                            <button
+                              type="button"
+                              onClick={() => setActiveTab('seo')}
+                              className={`px-3.5 py-2.5 text-xs font-bold border-b-2 transition-all flex items-center gap-1.5 whitespace-nowrap ${
+                                activeTab === 'seo' 
+                                  ? 'border-sky-500 text-sky-400' 
+                                  : 'border-transparent text-slate-450 hover:text-slate-200'
+                              }`}
+                            >
+                              <Search className="w-3.5 h-3.5" />
+                              Google SEO
+                              {isSerpRunning && <span className="w-1.5 h-1.5 rounded-full bg-sky-400 animate-ping"></span>}
+                            </button>
+                            
+                            <button
+                              type="button"
+                              onClick={() => setActiveTab('reviews')}
+                              className={`px-3.5 py-2.5 text-xs font-bold border-b-2 transition-all flex items-center gap-1.5 whitespace-nowrap ${
+                                activeTab === 'reviews' 
+                                  ? 'border-purple-500 text-purple-400' 
+                                  : 'border-transparent text-slate-450 hover:text-slate-200'
+                              }`}
+                            >
+                              <MessageSquare className="w-3.5 h-3.5" />
+                              Opiniones
+                              {isReviewsRunning && <span className="w-1.5 h-1.5 rounded-full bg-purple-400 animate-ping"></span>}
+                            </button>
+                            
+                            <button
+                              type="button"
+                              onClick={() => setActiveTab('dashboard')}
+                              className={`px-3.5 py-2.5 text-xs font-bold border-b-2 transition-all flex items-center gap-1.5 whitespace-nowrap ${
+                                activeTab === 'dashboard' 
+                                  ? 'border-emerald-500 text-emerald-400' 
+                                  : 'border-transparent text-slate-450 hover:text-slate-200'
+                              }`}
+                            >
+                              <Globe className="w-3.5 h-3.5" />
+                              Bright Data Stack
+                            </button>
+                          </div>
+
+                          {/* Tab Content Display */}
+                          <div className="pt-2">
+                            {activeTab === 'competitors' && (
+                              <CompetitorCards 
+                                products={competitors}
+                                companyName={companyName}
+                              />
+                            )}
+                            
+                            {activeTab === 'seo' && (
+                              <GoogleVisibility 
+                                serpData={serpResults}
+                                isLoading={isSerpRunning}
+                              />
+                            )}
+                            
+                            {activeTab === 'reviews' && (
+                              <ReviewsAnalysis 
+                                reviewsData={reviewsResults}
+                                isLoading={isReviewsRunning}
+                              />
+                            )}
+                            
+                            {activeTab === 'dashboard' && (
+                              <BrightDataDashboard 
+                                browserActive={isMlRunning || isReviewsRunning || competitors.length > 0}
+                                serpActive={isSerpRunning || serpResults !== null}
+                                reviewsActive={isReviewsRunning || reviewsResults !== null}
+                                isBrowserMock={false}
+                                isSerpMock={false}
+                                isReviewsMock={false}
+                              />
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })()}
 
                     <div className="whitespace-pre-wrap leading-relaxed text-sm text-slate-350 markdown-body">
                       {m.content}
