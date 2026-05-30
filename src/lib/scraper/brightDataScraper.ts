@@ -62,7 +62,7 @@ export async function scrapeMercadoLibre(searchQuery: string, minPrice?: number,
     }
 
     console.log(`[Scraper] Navigating to: ${targetUrl}`);
-    await page.goto(targetUrl, { waitUntil: 'domcontentloaded' });
+    await page.goto(targetUrl, { waitUntil: 'networkidle2' });
 
     console.log(`[Scraper] Page loaded. Extracting product data...`);
 
