@@ -78,13 +78,12 @@ npm install
 Create a `.env.local` file in the root of the project with the following keys:
 
 ```env
-# LLM (Gemini 2.5 Flash)
-GOOGLE_GENERATIVE_AI_API_KEY="your-gemini-api-key"
+# AI Models Configuration (Gemini)
+GOOGLE_GENERATIVE_AI_API_KEY="your_api_key_here"
 
-# Bright Data Scraping Browser
-BRIGHT_DATA_AUTH="your_user:your_password"
-BRIGHT_DATA_HOST="brd.superproxy.io:9222"
-BRIGHT_DATA_WS_ENDPOINT="wss://${BRIGHT_DATA_AUTH}@${BRIGHT_DATA_HOST}"
+# Bright Data Scraping Browser Configuration
+# Format: wss://brd-customer-<customer_id>-zone-<zone_name>:<password>@brd.superproxy.io:9222
+BRIGHT_DATA_WS_ENDPOINT="wss://your_username:your_password@brd.superproxy.io:9222"
 ```
 
 ### 4. Run the Development Server
