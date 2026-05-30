@@ -25,37 +25,42 @@ import {
   Trash2
 } from 'lucide-react';
 
-// Bright Data Scraping Browser Terminal Component
+// Bright Data Scraping Browser Terminal Logs Generator
+const getPresetLogs = (completed: boolean, count: number) => [
+  '\x1b[34m[INFO]\x1b[0m Connecting to WebSocket proxy wss://brd.superproxy.io:9222...',
+  '\x1b[32m[SUCCESS]\x1b[0m Secure tunnel established. Authenticating session credentials...',
+  '\x1b[34m[INFO]\x1b[0m Target URL resolved: https://listado.mercadolibre.com.mx...',
+  '\x1b[33m[SECURITY]\x1b[0m Activating Bright Data Bot-Detection bypass...',
+  '\x1b[33m[SECURITY]\x1b[0m Bypassing WebGL fingerprints and Cloudflare Turnstile...',
+  '\x1b[32m[SUCCESS]\x1b[0m Target page successfully unlocked and rendered.',
+  '\x1b[34m[BROWSER]\x1b[0m Evaluating browser DOM query selectAll(".ui-search-layout__item")...',
+  completed 
+    ? `\x1b[32m[DATA]\x1b[0m Extracted ${count || 5} competitor products and pricing tiers.` 
+    : '\x1b[34m[DATA]\x1b[0m Extracting product titles, ratings, prices, and shipping badges...',
+  '\x1b[32m[SUCCESS]\x1b[0m Parsing complete. Payload successfully formatted. Closing session.',
+];
+
 interface TerminalProps {
   completed?: boolean;
   count?: number;
 }
 
 function BrightDataTerminal({ completed = false, count = 0 }: TerminalProps) {
-  const presetLogs = [
-    '\x1b[34m[INFO]\x1b[0m Connecting to WebSocket proxy wss://brd.superproxy.io:9222...',
-    '\x1b[32m[SUCCESS]\x1b[0m Secure tunnel established. Authenticating session credentials...',
-    '\x1b[34m[INFO]\x1b[0m Target URL resolved: https://listado.mercadolibre.com.mx...',
-    '\x1b[33m[SECURITY]\x1b[0m Activating Bright Data Bot-Detection bypass...',
-    '\x1b[33m[SECURITY]\x1b[0m Bypassing WebGL fingerprints and Cloudflare Turnstile...',
-    '\x1b[32m[SUCCESS]\x1b[0m Target page successfully unlocked and rendered.',
-    '\x1b[34m[BROWSER]\x1b[0m Evaluating browser DOM query selectAll(".ui-search-layout__item")...',
-    completed 
-      ? `\x1b[32m[DATA]\x1b[0m Extracted ${count || 5} competitor products and pricing tiers.` 
-      : '\x1b[34m[DATA]\x1b[0m Extracting product titles, ratings, prices, and shipping badges...',
-    '\x1b[32m[SUCCESS]\x1b[0m Parsing complete. Payload successfully formatted. Closing session.',
-  ];
-
+  const initialLogs = getPresetLogs(completed, count);
   const [logs, setLogs] = useState<string[]>(
-    completed ? presetLogs : [presetLogs[0]]
+    completed ? initialLogs : [initialLogs[0]]
   );
 
   useEffect(() => {
     if (completed) return;
     let index = 1;
     const interval = setInterval(() => {
-      if (index < presetLogs.length) {
-        setLogs(prev => [...prev, presetLogs[index]]);
+      const currentPreset = getPresetLogs(false, 0);
+      if (index < currentPreset.length) {
+        const nextLog = currentPreset[index];
+        if (nextLog) {
+          setLogs(prev => [...prev, nextLog]);
+        }
         index++;
       } else {
         clearInterval(interval);
@@ -77,6 +82,7 @@ function BrightDataTerminal({ completed = false, count = 0 }: TerminalProps) {
       </div>
       <div className="space-y-1 select-all">
         {logs.map((log, idx) => {
+          if (!log) return null;
           let formattedLog = log
             .replace('\x1b[34m', '<span class="text-blue-400">')
             .replace('\x1b[32m', '<span class="text-emerald-400">')
