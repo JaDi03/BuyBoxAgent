@@ -30,68 +30,102 @@ The system utilizes two specialized agents to maximize reasoning capabilities wh
 1. **ScraperAgent (Agent 1 - `Gemini 2.5 Flash`)**: Optimized for high-speed tool calling. It receives the user request alongside the seller's profile, calculates a search price window of $\pm30\%$ to filter out irrelevant products (like cheap accessories or unmatched item tiers), and executes the web scraping tool (`mercadoLibreTool`).
 2. **StrategyAgent (Agent 2 - `Gemini 2.5 Pro`)**: A high-reasoning cognitive analyst. It processes the raw JSON competitor dataset under strict anti-hallucination guardrails, flags and filters out the user's own store from the listings, and drafts a comprehensive competitive strategy report divided into actionable phases (Price Adjustments, Logistical Overhauls, Ad Campaigns).
 
-### 🔄 System Sequence Diagram
+### 🔄 Agent Orchestration Flow
+The following diagram illustrates how the frontend coordinates tasks and prompts sequentially between our specialized AI agents:
 
 ```mermaid
-sequenceDiagram
-    autonumber
-    actor Seller as Seller (User)
-    participant UI as Next.js Frontend (Chat & Profile)
-    participant A1 as ScraperAgent (Agent 1 - Gemini 2.5 Flash)
-    participant Tool as mercadoLibreTool (Puppeteer)
-    participant BD as Bright Data Scraping Browser
-    participant ML as Mercado Libre Mexico
-    participant A2 as StrategyAgent (Agent 2 - Gemini 2.5 Pro)
+graph LR
+    classDef client fill:#3B82F6,stroke:#1D4ED8,stroke-width:1px,color:#fff
+    classDef agent fill:#8B5CF6,stroke:#6D28D9,stroke-width:1px,color:#fff
+    classDef data fill:#10B981,stroke:#047857,stroke-width:1px,color:#fff
 
-    Seller->>UI: Configure Profile + Start Analysis
-    UI->>A1: Send Query + Profile Context (POST /api/chat)
-    Note over A1: Calculates target price range (±30%)<br/>Decides to run tool call
-    A1->>Tool: Call mercadoLibreTool(query, minPrice, maxPrice)
-    activate Tool
-    Tool->>BD: Open WebSocket proxy connection
-    activate BD
-    Note over BD: Solves CAPTCHAs / Cloudflare<br/>Mocks WebGL canvas fingerprints
-    BD->>ML: Navigate to Mercado Libre Mexico & extract items (.ui-search-layout__item)
-    ML-->>BD: Return fully rendered HTML
-    BD-->>Tool: Return structured listings (JSON)
-    deactivate BD
-    Tool-->>A1: Return extracted competitor details (JSON)
-    deactivate Tool
-    A1-->>UI: Stream: "Extraction complete. Passing data..."
-    Note over UI: Renders competitor cards<br/>and logs live terminal sessions
-    UI->>A2: Send Chat History + Profile + JSON Data (POST /api/strategy)
-    Note over A2: Gemini 2.5 Pro analyzes pricing,<br/>reviews, shipping speeds, and MSI
-    A2-->>UI: Stream: Strategic Attack Report (Clean Markdown)
-    UI-->>Seller: Displays finalized Report
+    User(("Seller (User)")):::client -->|Input Profile & Query| UI["Next.js Frontend"]:::client
+    UI -->|1. Request Diagnostics| A1["ScraperAgent<br/>(Gemini 2.5 Flash)"]:::agent
+    A1 -->|2. Runs Sequential Tools| BD[Bright Data Stack]:::data
+    BD -->|3. Structured Feeds JSON| UI
+    UI -->|4. Request Strategy| A2["StrategyAgent<br/>(Gemini 2.5 Pro)"]:::agent
+    A2 -->|5. Rich Executive Report| UI
+    UI -->|Render| User
 ```
+
+### 📊 Data Ingestion Pipeline
+This layout details the inputs, tools, and rich structured outputs extracted by each Bright Data product in the workflow:
+
+```mermaid
+graph LR
+    classDef source fill:#3B82F6,stroke:#1D4ED8,stroke-width:1px,color:#fff
+    classDef tool fill:#8B5CF6,stroke:#6D28D9,stroke-width:1px,color:#fff
+    classDef data fill:#10B981,stroke:#047857,stroke-width:1px,color:#fff
+
+    Query["Search Target (e.g., Yeti 30oz)"]:::source --> MLT["mercadoLibreTool"]:::tool
+    Query --> SRPT["serpTool"]:::tool
+    
+    MLT -->|wss:// Scraping Browser| MLData["Mercado Libre Mexico:\n- Competitor pricing & discounts\n- Envío FULL speed & logistics\n- Ratings & official store flags"]:::data
+
+    SRPT -->|POST /request SERP API| SERPData["Google Search MX:\n- Organic SEO ranking positions\n- Ad placements & Shopping rank\n- Competitor Google URLs"]:::data
+
+    MLData -->|Top Competitor Link| RVT["reviewsTool"]:::tool
+    RVT -->|wss:// Scraping Browser| RVData["Review Intelligence:\n- Customer raw comments\n- Rating breakdown & dates\n- Buyer complaints (vulnerabilities)"]:::data
+```
+
+<details>
+  <summary>🔄 View Detailed Technical Sequence Diagram (System Steps)</summary>
+
+  ```mermaid
+  sequenceDiagram
+      autonumber
+      actor Seller as Seller (User)
+      participant UI as Next.js Frontend (Hub & Tabs)
+      participant A1 as ScraperAgent (Gemini 2.5 Flash)
+      participant BD as Bright Data APIs (Browser/SERP)
+      participant ML as Mercado Libre / Google Search
+      participant A2 as StrategyAgent (Gemini 2.5 Pro)
+
+      Seller->>UI: Configure Profile & Start
+      UI->>A1: Send Query & Context (POST /api/chat)
+      
+      Note over A1: Calls mercadoLibreTool (ML) & serpTool (Google)
+      A1->>BD: Connect to Scraping Browser (Websocket) & SERP API (REST)
+      BD->>ML: Scrapes product listings & Google search rankings
+      ML-->>BD: Returns fully rendered HTML & parsed SERP JSON
+      BD-->>A1: Returns competitor listings (JSON) & SEO rankings (JSON)
+      
+      Note over A1: Identifies top competitor in ML listings
+      A1->>BD: Executes reviewsTool on competitor URL
+      BD->>ML: Navigates, scrolls, and extracts buyer comments
+      ML-->>BD: Returns dynamically loaded reviews
+      BD-->>A1: Returns competitor reviews (JSON)
+      
+      A1-->>UI: Stream: "Extraction complete. Passing data..."
+      UI->>A2: Send Chat History + Profile + Consolidated JSON (POST /api/strategy)
+      Note over A2: Gemini 2.5 Pro analyzes Pricing, SEO, and Sentiment Gaps
+      A2-->>UI: Stream: Strategic Attack Report (Executive Tables & To-Do Checklist)
+      UI-->>Seller: Renders Hub (Tabs) & finalized Report
+  ```
+</details>
 
 ---
 
 ## 🏗️ System Structure
-
 The following diagram illustrates the relationship between the client-side components and the serverless APIs:
 
 ```mermaid
-graph TD
+graph LR
     %% Styling %%
-    classDef client fill:#3B82F6,stroke:#1D4ED8,stroke-width:2px,color:#fff
-    classDef agent fill:#8B5CF6,stroke:#6D28D9,stroke-width:2px,color:#fff
-    classDef scraper fill:#06B6D4,stroke:#0891B2,stroke-width:2px,color:#fff
-    classDef target fill:#EF4444,stroke:#B91C1C,stroke-width:2px,color:#fff
+    classDef client fill:#3B82F6,stroke:#1D4ED8,stroke-width:1px,color:#fff
+    classDef agent fill:#8B5CF6,stroke:#6D28D9,stroke-width:1px,color:#fff
+    classDef scraper fill:#06B6D4,stroke:#0891B2,stroke-width:1px,color:#fff
+    classDef target fill:#EF4444,stroke:#B91C1C,stroke-width:1px,color:#fff
 
-    User(("Seller (User)")):::client -->|Define Profile & Query| UI["Next.js Frontend<br/>(Chat & Seller Profile)"]:::client
-    UI -->|1. Request Scraping| ChatAPI["/api/chat Route<br/>(ScraperAgent - Flash)"]:::agent
-    ChatAPI <-->|Tool Execution| MLTool["mercadoLibreTool"]:::scraper
-    MLTool <-->|WebSocket wss://| BD["Bright Data<br/>Scraping Browser"]:::scraper
-    BD <-->|Web Unlocker| ML["Mercado Libre México"]:::target
+    User(("Seller (User)")):::client -->|Define Profile| UI["Next.js Frontend<br/>(Seller Profile & Chat Hub)"]:::client
+    UI -->|1. Request Scraping| ChatAPI["/api/chat Route<br/>(ScraperAgent)"]:::agent
+    ChatAPI <-->|Tool Execution| Tools["mercadoLibreTool<br/>serpTool<br/>reviewsTool"]:::scraper
+    Tools <-->|Websocket / REST| BD["Bright Data Stack<br/>(Scraping Browser & SERP API)"]:::scraper
+    BD <-->|Web Unlocker| Target["E-Commerce & Search Target<br/>(Mercado Libre & Google MX)"]:::target
     
-    MLTool -->|Return Competitors JSON| UI
-    
-    UI -->|2. Request Analysis| StrategyAPI["/api/strategy Route<br/>(StrategyAgent - Pro)"]:::agent
+    Tools -->|Consolidated Feeds JSON| UI
+    UI -->|2. Request Analysis| StrategyAPI["/api/strategy Route<br/>(StrategyAgent)"]:::agent
     StrategyAPI -->|Generate Strategy Report| UI
-    
-    UI -->|Render| Terminal["Console Terminal Logs<br/>(BrightDataTerminal)"]:::client
-    UI -->|Render| Competitors["Competitor Cards Grid<br/>(Thumbnails, Ratings, Shipping Speed)"]:::client
 ```
 
 ---
