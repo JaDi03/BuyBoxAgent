@@ -24,6 +24,7 @@ import BrightDataTerminal from '@/components/BrightDataTerminal';
 import GoogleVisibility from '@/components/GoogleVisibility';
 import ReviewsAnalysis from '@/components/ReviewsAnalysis';
 import BrightDataDashboard from '@/components/BrightDataDashboard';
+import StrategyReport from '@/components/StrategyReport';
 
 export default function Chat() {
   // Seller Profile Form State
@@ -519,8 +520,12 @@ export default function Chat() {
                       );
                     })()}
 
-                    <div className="whitespace-pre-wrap leading-relaxed text-sm text-slate-350 markdown-body">
-                      {m.content}
+                    <div className="leading-relaxed text-sm text-slate-350">
+                      {m.id.startsWith('strategy-') ? (
+                        <StrategyReport content={m.content} />
+                      ) : (
+                        <div className="whitespace-pre-wrap markdown-body">{m.content}</div>
+                      )}
                     </div>
                   </div>
                 </div>
