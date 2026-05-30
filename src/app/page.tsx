@@ -5,100 +5,18 @@ import { useChat } from 'ai/react';
 import { 
   Bot, 
   Send, 
-  BrainCircuit, 
-  Activity, 
-  PackageSearch, 
-  User, 
-  Tag, 
-  DollarSign, 
-  Award, 
-  Truck, 
-  ShieldCheck, 
-  ChevronDown, 
-  ChevronUp, 
-  Rocket, 
-  CheckCircle2, 
-  XCircle, 
-  AlertCircle,
+  Info, 
+  Trash2,
   Sparkles,
-  Info,
-  Trash2
+  BrainCircuit
 } from 'lucide-react';
 
-// Bright Data Scraping Browser Terminal Logs Generator
-const getPresetLogs = (completed: boolean, count: number) => [
-  '\x1b[34m[INFO]\x1b[0m Connecting to WebSocket proxy wss://brd.superproxy.io:9222...',
-  '\x1b[32m[SUCCESS]\x1b[0m Secure tunnel established. Authenticating session credentials...',
-  '\x1b[34m[INFO]\x1b[0m Target URL resolved: https://listado.mercadolibre.com.mx...',
-  '\x1b[33m[SECURITY]\x1b[0m Activating Bright Data Bot-Detection bypass...',
-  '\x1b[33m[SECURITY]\x1b[0m Bypassing WebGL fingerprints and Cloudflare Turnstile...',
-  '\x1b[32m[SUCCESS]\x1b[0m Target page successfully unlocked and rendered.',
-  '\x1b[34m[BROWSER]\x1b[0m Evaluating browser DOM query selectAll(".ui-search-layout__item")...',
-  completed 
-    ? `\x1b[32m[DATA]\x1b[0m Extracted ${count || 5} competitor products and pricing tiers.` 
-    : '\x1b[34m[DATA]\x1b[0m Extracting product titles, ratings, prices, and shipping badges...',
-  '\x1b[32m[SUCCESS]\x1b[0m Parsing complete. Payload successfully formatted. Closing session.',
-];
-
-interface TerminalProps {
-  completed?: boolean;
-  count?: number;
-}
-
-function BrightDataTerminal({ completed = false, count = 0 }: TerminalProps) {
-  const initialLogs = getPresetLogs(completed, count);
-  const [logs, setLogs] = useState<string[]>(
-    completed ? initialLogs : [initialLogs[0]]
-  );
-
-  useEffect(() => {
-    if (completed) return;
-    let index = 1;
-    const interval = setInterval(() => {
-      const currentPreset = getPresetLogs(false, 0);
-      if (index < currentPreset.length) {
-        const nextLog = currentPreset[index];
-        if (nextLog) {
-          setLogs(prev => [...prev, nextLog]);
-        }
-        index++;
-      } else {
-        clearInterval(interval);
-      }
-    }, 1200);
-
-    return () => clearInterval(interval);
-  }, [completed]);
-
-  return (
-    <div className="w-full bg-slate-950 rounded-lg p-3.5 font-mono text-[10px] text-slate-300 border border-slate-850 shadow-inner mt-2 max-h-48 overflow-y-auto leading-relaxed">
-      <div className="flex items-center justify-between pb-2 border-b border-slate-900 mb-2">
-        <div className="flex gap-1.5">
-          <span className="w-2 h-2 rounded-full bg-rose-500/80"></span>
-          <span className="w-2 h-2 rounded-full bg-amber-500/80"></span>
-          <span className="w-2 h-2 rounded-full bg-emerald-500/80"></span>
-        </div>
-        <span className="text-[9px] uppercase tracking-wider text-slate-500 font-bold">Bright Data Scraping Browser Console</span>
-      </div>
-      <div className="space-y-1 select-all">
-        {logs.map((log, idx) => {
-          if (!log) return null;
-          let formattedLog = log
-            .replace('\x1b[34m', '<span class="text-blue-400">')
-            .replace('\x1b[32m', '<span class="text-emerald-400">')
-            .replace('\x1b[33m', '<span class="text-amber-400">')
-            .replace('\x1b[0m', '</span>');
-          return (
-            <div key={idx} dangerouslySetInnerHTML={{ __html: formattedLog }} />
-          );
-        })}
-        {!completed && (
-          <span className="inline-block w-1.5 h-3 bg-blue-400 animate-pulse ml-0.5 align-middle"></span>
-        )}
-      </div>
-    </div>
-  );
-}
+// Import modular components
+import SellerProfileForm from '@/components/SellerProfileForm';
+import OrchestratorMonitor from '@/components/OrchestratorMonitor';
+import ScraperObservations from '@/components/ScraperObservations';
+import CompetitorCards from '@/components/CompetitorCards';
+import BrightDataTerminal from '@/components/BrightDataTerminal';
 
 export default function Chat() {
   // Seller Profile Form State
@@ -285,11 +203,12 @@ export default function Chat() {
         
         {/* Header */}
         <div className="p-5 border-b border-slate-800 bg-slate-900/50 backdrop-blur flex justify-between items-center">
-          <h2 className="text-lg font-bold flex items-center gap-2 bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
+          <h2 className="text-lg font-bold flex items-center gap-2 bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent select-none">
             <BrainCircuit className="w-5 h-5 text-blue-400" />
             Panel de Control
           </h2>
           <button 
+            type="button"
             onClick={handleClearChat} 
             className="p-1.5 text-slate-500 hover:text-rose-400 hover:bg-slate-800/80 rounded-lg transition"
             title="Limpiar Chat"
@@ -300,266 +219,32 @@ export default function Chat() {
         
         {/* Scrollable Content */}
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
-          
-          {/* Seller Profile Card (Mi Perfil) */}
-          <div className="bg-slate-800/40 rounded-xl border border-slate-850 overflow-hidden transition-all shadow-lg backdrop-blur">
-            <button 
-              onClick={() => setProfileExpanded(!profileExpanded)}
-              className="w-full p-4 flex items-center justify-between bg-slate-800/60 hover:bg-slate-800 transition border-b border-slate-700/50"
-            >
-              <span className="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2">
-                <User className="w-4 h-4 text-blue-400" />
-                Mi Perfil de Vendedor
-              </span>
-              {profileExpanded ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
-            </button>
+          <SellerProfileForm
+            companyName={companyName}
+            setCompanyName={setCompanyName}
+            companyProduct={companyProduct}
+            setCompanyProduct={setCompanyProduct}
+            companyPrice={companyPrice}
+            setCompanyPrice={setCompanyPrice}
+            companyLevel={companyLevel}
+            setCompanyLevel={setCompanyLevel}
+            companyShipping={companyShipping}
+            setCompanyShipping={setCompanyShipping}
+            companyWarranty={companyWarranty}
+            setCompanyWarranty={setCompanyWarranty}
+            profileExpanded={profileExpanded}
+            setProfileExpanded={setProfileExpanded}
+            isLoading={isLoading || agent2State === 'running'}
+            onStartAnalysis={handleStartAnalysis}
+          />
 
-            {profileExpanded ? (
-              <div className="p-4 space-y-3.5">
-                <div>
-                  <label className="text-[10px] uppercase font-bold text-slate-500 flex items-center gap-1 mb-1">
-                    <User className="w-3 h-3" /> Nombre de tu Tienda
-                  </label>
-                  <input 
-                    type="text" 
-                    value={companyName}
-                    onChange={(e) => setCompanyName(e.target.value)}
-                    className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition"
-                    placeholder="MiTienda MX"
-                  />
-                </div>
+          <OrchestratorMonitor
+            agent1State={agent1State}
+            agent2State={agent2State}
+            scrapedCompetitorsCount={scrapedCompetitorsCount}
+          />
 
-                <div>
-                  <label className="text-[10px] uppercase font-bold text-slate-500 flex items-center gap-1 mb-1">
-                    <Tag className="w-3 h-3" /> Producto a Analizar
-                  </label>
-                  <input 
-                    type="text" 
-                    value={companyProduct}
-                    onChange={(e) => setCompanyProduct(e.target.value)}
-                    className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition"
-                    placeholder="Ej. Termo Yeti 30oz"
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <label className="text-[10px] uppercase font-bold text-slate-500 flex items-center gap-1 mb-1">
-                      <DollarSign className="w-3 h-3" /> Tu Precio (MXN)
-                    </label>
-                    <input 
-                      type="number" 
-                      value={companyPrice}
-                      onChange={(e) => setCompanyPrice(e.target.value)}
-                      className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition"
-                      placeholder="800"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="text-[10px] uppercase font-bold text-slate-500 flex items-center gap-1 mb-1">
-                      <Award className="w-3 h-3" /> Reputación
-                    </label>
-                    <select 
-                      value={companyLevel}
-                      onChange={(e) => setCompanyLevel(e.target.value)}
-                      className="w-full bg-slate-900 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-blue-500 transition"
-                    >
-                      <option value="Sin medalla">Sin Medalla</option>
-                      <option value="MercadoLíder">MercadoLíder</option>
-                      <option value="MercadoLíder Gold">Gold</option>
-                      <option value="MercadoLíder Platinum">Platinum</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <label className="text-[10px] uppercase font-bold text-slate-500 flex items-center gap-1 mb-1">
-                      <Truck className="w-3 h-3" /> Tipo Envío
-                    </label>
-                    <select 
-                      value={companyShipping}
-                      onChange={(e) => setCompanyShipping(e.target.value)}
-                      className="w-full bg-slate-900 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-blue-500 transition"
-                    >
-                      <option value="Mercado Envíos FULL">Envío FULL</option>
-                      <option value="Mercado Envíos Colecta">Normal (Colecta)</option>
-                      <option value="Mercado Envíos Flex">Flex (Rápido)</option>
-                      <option value="Acordar con vendedor">Acordar</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="text-[10px] uppercase font-bold text-slate-500 flex items-center gap-1 mb-1">
-                      <ShieldCheck className="w-3 h-3" /> Garantía
-                    </label>
-                    <select 
-                      value={companyWarranty}
-                      onChange={(e) => setCompanyWarranty(e.target.value)}
-                      className="w-full bg-slate-900 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-blue-500 transition"
-                    >
-                      <option value="Sin garantía">Sin Garantía</option>
-                      <option value="30 días de garantía">30 días</option>
-                      <option value="90 días de garantía">90 días</option>
-                      <option value="1 año de garantía">1 año</option>
-                    </select>
-                  </div>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={handleStartAnalysis}
-                  disabled={isLoading || agent2State === 'running' || !companyProduct.trim()}
-                  className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 disabled:opacity-50 text-white text-xs font-bold py-2 px-4 rounded-lg flex items-center justify-center gap-2 transition duration-200 shadow-md shadow-purple-950/20 active:scale-[0.98]"
-                >
-                  <Rocket className="w-3.5 h-3.5" />
-                  Iniciar Análisis de Mercado
-                </button>
-              </div>
-            ) : (
-              <div className="p-3 text-[11px] text-slate-400 bg-slate-900/30 flex justify-between items-center">
-                <span className="truncate font-semibold text-slate-300">{companyName}</span>
-                <span className="text-emerald-400 font-bold">${companyPrice} MXN</span>
-                <span className="bg-slate-800 px-1.5 py-0.5 rounded text-[10px] border border-slate-750 text-slate-300">{companyShipping.replace('Mercado Envíos ', '')}</span>
-              </div>
-            )}
-          </div>
-
-          {/* Orchestrator Monitor (Monitoreo de Agentes) */}
-          <div className="bg-slate-850/50 rounded-xl border border-slate-805 p-4 space-y-3.5 shadow-lg">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
-              <Activity className="w-4 h-4 text-emerald-400" />
-              Orquestador de Agentes
-            </h3>
-            
-            <div className="space-y-3">
-              {/* Agent 1 Status */}
-              <div className="flex items-center justify-between p-2.5 bg-slate-900/50 rounded-lg border border-slate-800">
-                <div className="flex items-center gap-2.5">
-                  <div className={`p-1.5 rounded-lg ${agent1State === 'running' ? 'bg-blue-500/10 text-blue-400' : agent1State === 'done' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-slate-800 text-slate-500'}`}>
-                    <PackageSearch className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <h4 className="text-xs font-bold text-slate-200">1. ScraperAgent</h4>
-                    <p className="text-[10px] text-slate-500">Bright Data Extractor</p>
-                  </div>
-                </div>
-                <div>
-                  {agent1State === 'idle' && (
-                    <span className="text-[10px] bg-slate-800 text-slate-400 px-2 py-0.5 rounded-full border border-slate-700">Espera</span>
-                  )}
-                  {agent1State === 'running' && (
-                    <span className="text-[10px] bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded-full border border-blue-800 animate-pulse flex items-center gap-1">
-                      <span className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-ping"></span>
-Scraping...
-                    </span>
-                  )}
-                  {agent1State === 'done' && (
-                    <span className="text-[10px] bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded-full border border-emerald-800 flex items-center gap-1 font-semibold">
-                      <CheckCircle2 className="w-3 h-3" />
-                      Listo ({scrapedCompetitorsCount})
-                    </span>
-                  )}
-                  {agent1State === 'error' && (
-                    <span className="text-[10px] bg-rose-500/20 text-rose-400 px-2 py-0.5 rounded-full border border-rose-800 flex items-center gap-1 font-semibold">
-                      <XCircle className="w-3 h-3" />
-                      Error
-                    </span>
-                  )}
-                </div>
-              </div>
-
-              {/* Agent 2 Status */}
-              <div className="flex items-center justify-between p-2.5 bg-slate-900/50 rounded-lg border border-slate-800">
-                <div className="flex items-center gap-2.5">
-                  <div className={`p-1.5 rounded-lg ${agent2State === 'running' ? 'bg-purple-500/10 text-purple-400' : agent2State === 'done' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-slate-800 text-slate-500'}`}>
-                    <Bot className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <h4 className="text-xs font-bold text-slate-200">2. StrategyAgent</h4>
-                    <p className="text-[10px] text-slate-500">Gemini Competitor Analyst</p>
-                  </div>
-                </div>
-                <div>
-                  {agent2State === 'idle' && (
-                    <span className="text-[10px] bg-slate-800 text-slate-400 px-2 py-0.5 rounded-full border border-slate-700">Espera</span>
-                  )}
-                  {agent2State === 'running' && (
-                    <span className="text-[10px] bg-purple-500/20 text-purple-400 px-2 py-0.5 rounded-full border border-purple-800 animate-pulse flex items-center gap-1">
-                      <span className="w-1.5 h-1.5 bg-purple-400 rounded-full animate-ping"></span>
-Analizando...
-                    </span>
-                  )}
-                  {agent2State === 'done' && (
-                    <span className="text-[10px] bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded-full border border-emerald-800 flex items-center gap-1 font-semibold">
-                      <CheckCircle2 className="w-3 h-3" />
-                      Completado
-                    </span>
-                  )}
-                  {agent2State === 'error' && (
-                    <span className="text-[10px] bg-rose-500/20 text-rose-400 px-2 py-0.5 rounded-full border border-rose-800 flex items-center gap-1 font-semibold">
-                      <XCircle className="w-3 h-3" />
-                      Error
-                    </span>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Observations log (Historial de Procesos de Herramienta) */}
-          <div className="space-y-3.5">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500">Observaciones del Scraper</h3>
-            
-            <div className="space-y-3">
-              {messages.map(m => (
-                m.toolInvocations?.map(toolInvocation => {
-                  const toolCallId = toolInvocation.toolCallId;
-                  const isFinished = 'result' in toolInvocation;
-
-                  return (
-                    <div key={toolCallId} className="bg-slate-900/60 rounded-xl p-3.5 border border-slate-800/80 shadow-md space-y-2">
-                      <div className="flex items-center justify-between">
-                        <span className="text-[10px] font-bold text-blue-400 flex items-center gap-1 uppercase tracking-wider">
-                          <PackageSearch className="w-3.5 h-3.5" />
-                          {toolInvocation.toolName}
-                        </span>
-                        {isFinished ? (
-                          <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.8)]"></span>
-                        ) : (
-                          <span className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse shadow-[0_0_6px_rgba(245,158,11,0.8)]"></span>
-                        )}
-                      </div>
-                      
-                      <div className="text-[11px] text-slate-300 font-mono bg-slate-950 p-2.5 rounded border border-slate-900 overflow-x-auto">
-                        <span className="text-slate-500">{'>'} Query: </span>
-                        <span className="text-emerald-400">"{toolInvocation.args.searchQuery}"</span>
-                        <br />
-                        <span className="text-slate-500">{'>'} Range: </span>
-                        <span className="text-emerald-400">{toolInvocation.args.minPrice}-{toolInvocation.args.maxPrice} MXN</span>
-                      </div>
-
-                      {isFinished && (
-                        <div className="text-[10px] text-slate-400 flex justify-between items-center pt-1 border-t border-slate-800">
-                          <span>Status: <strong className={toolInvocation.result.success ? "text-emerald-400" : "text-rose-400"}>{toolInvocation.result.success ? "Completado" : "Error"}</strong></span>
-                          <span>Competidores: <strong>{toolInvocation.result.data?.length || 0}</strong></span>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })
-              ))}
-              
-              {messages.length === 0 && (
-                <div className="text-center text-slate-600 py-6 text-xs flex flex-col items-center">
-                  <Activity className="w-6 h-6 mb-2 opacity-15" />
-                  Orquestador inactivo. Lanza un análisis para observar los logs.
-                </div>
-              )}
-            </div>
-          </div>
-          
+          <ScraperObservations messages={messages} />
         </div>
       </aside>
 
@@ -567,7 +252,7 @@ Analizando...
       <main className="flex-1 flex flex-col h-full bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-slate-900 via-slate-950 to-slate-950">
         
         {/* Header */}
-        <header className="p-5 border-b border-slate-800/80 bg-slate-950/70 backdrop-blur flex justify-between items-center z-10">
+        <header className="p-5 border-b border-slate-800/80 bg-slate-950/70 backdrop-blur flex justify-between items-center z-10 select-none">
           <div>
             <h1 className="text-xl font-bold tracking-tight text-white flex items-center gap-2">
               BuyBoxAgent <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20 font-normal">Multi-Agent v2.0</span>
@@ -640,117 +325,11 @@ Analizando...
                       if (tool.toolName === 'mercadoLibreTool' && 'result' in tool && tool.result?.success) {
                         const products = tool.result.data || [];
                         return (
-                          <div key={tool.toolCallId} className="mb-6 bg-slate-950/50 rounded-xl p-4 border border-slate-800/80">
-                            <div className="flex items-center gap-3 mb-4">
-                              <div className="w-9 h-9 rounded-full bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20">
-                                <PackageSearch className="w-4.5 h-4.5 text-emerald-400" />
-                              </div>
-                              <div>
-                                <h4 className="text-xs font-bold text-emerald-400 uppercase tracking-wide">Datos en tiempo real extraídos</h4>
-                                <p className="text-[10px] text-slate-500">Filtrado inteligente mediante Bright Data browser</p>
-                              </div>
-                            </div>
-                            
-                            {/* Grid of Competitors with Images and Details */}
-                            <div className="grid grid-cols-1 xl:grid-cols-2 gap-3">
-                              {products.slice(0, 6).map((product: any, idx: number) => {
-                                const isUserProduct = companyName && product.seller?.toLowerCase().includes(companyName.toLowerCase());
-                                return (
-                                  <a 
-                                    key={idx} 
-                                    href={product.link} 
-                                    target="_blank" 
-                                    rel="noreferrer" 
-                                    className={`flex gap-3 bg-slate-900 hover:bg-slate-850 border ${isUserProduct ? 'border-amber-500/40 bg-amber-500/[0.02]' : 'border-slate-800 hover:border-slate-700'} transition rounded-xl p-3.5 group relative overflow-hidden`}
-                                  >
-                                    {/* User product indicator badge */}
-                                    {isUserProduct && (
-                                      <div className="absolute top-0 right-0 bg-amber-500 text-slate-950 text-[9px] px-2 py-0.5 rounded-bl font-bold uppercase tracking-wider">
-                                        Tu Producto
-                                      </div>
-                                    )}
-
-                                    {/* Product Image */}
-                                    <div className="w-16 h-16 bg-white rounded-lg p-1 shrink-0 flex items-center justify-center border border-slate-800">
-                                      {product.image ? (
-                                        <img 
-                                          src={product.image} 
-                                          alt={product.title} 
-                                          className="w-full h-full object-contain"
-                                        />
-                                      ) : (
-                                        <PackageSearch className="w-8 h-8 text-slate-300" />
-                                      )}
-                                    </div>
-
-                                    {/* Product Info */}
-                                    <div className="flex-1 min-w-0 flex flex-col justify-between">
-                                      <div>
-                                        <div className="text-xs font-semibold text-slate-200 line-clamp-1 group-hover:text-blue-400 transition-colors">
-                                          {product.title}
-                                        </div>
-                                        <div className="flex items-center gap-1.5 mt-0.5">
-                                          {product.rating && (
-                                            <span className="text-[10px] text-amber-400 font-medium">
-                                              ⭐ {product.rating} <span className="text-slate-500">({product.reviewsCount || 0})</span>
-                                            </span>
-                                          )}
-                                          {product.bestSellerTag && (
-                                            <span className="text-[8px] bg-amber-500/20 text-amber-400 border border-amber-500/30 px-1 py-0.2 rounded font-bold uppercase">MÁS VENDIDO</span>
-                                          )}
-                                          {product.isSponsored && (
-                                            <span className="text-[8px] bg-blue-500/10 text-blue-400 border border-blue-500/20 px-1 py-0.2 rounded font-medium">Promo</span>
-                                          )}
-                                        </div>
-                                      </div>
-
-                                      <div className="flex items-end justify-between mt-1">
-                                        <div>
-                                          <div className="flex items-center gap-1">
-                                            <span className="text-sm font-bold text-slate-100">${product.price} MXN</span>
-                                            {product.discountPercentage && (
-                                              <span className="text-[9px] text-emerald-400 font-bold bg-emerald-500/10 px-1 rounded">{product.discountPercentage}</span>
-                                            )}
-                                          </div>
-                                          {product.originalPrice && (
-                                            <div className="text-[9px] text-slate-500 line-through">${product.originalPrice}</div>
-                                          )}
-                                        </div>
-
-                                        <div className="text-right flex flex-col items-end gap-0.5">
-                                          {(product.isFullShipping || product.isFull) && (
-                                            <span className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[8px] font-bold px-1.5 py-0.2 rounded flex items-center gap-0.5">
-                                              FULL
-                                            </span>
-                                          )}
-                                          {product.shippingSpeed && (
-                                            <span className="text-[9px] text-slate-400 truncate max-w-[90px]">{product.shippingSpeed}</span>
-                                          )}
-                                          {product.seller && (
-                                            <span className="text-[9px] text-slate-500 font-medium truncate max-w-[100px]">
-                                              Por: {product.seller}
-                                            </span>
-                                          )}
-                                        </div>
-                                      </div>
-                                    </div>
-                                  </a>
-                                );
-                              })}
-                            </div>
-
-                            {/* Terminal logs history */}
-                            <div className="mt-4 pt-3 border-t border-slate-800/60">
-                              <details className="group">
-                                <summary className="text-[10px] text-slate-500 font-mono cursor-pointer hover:text-slate-350 transition list-none flex items-center gap-1 select-none">
-                                  <span className="text-emerald-500 font-bold group-open:rotate-90 transition-transform">▶</span> Ver logs de la sesión (Bright Data Scraping Browser)
-                                </summary>
-                                <div className="mt-2">
-                                  <BrightDataTerminal completed={true} count={products.length} />
-                                </div>
-                              </details>
-                            </div>
-                          </div>
+                          <CompetitorCards 
+                            key={tool.toolCallId}
+                            products={products}
+                            companyName={companyName}
+                          />
                         );
                       }
                       
@@ -772,7 +351,7 @@ Analizando...
                       return null;
                     })}
 
-                    <div className="whitespace-pre-wrap leading-relaxed text-sm text-slate-300 markdown-body">
+                    <div className="whitespace-pre-wrap leading-relaxed text-sm text-slate-350 markdown-body">
                       {m.content}
                     </div>
                   </div>

@@ -54,5 +54,5 @@ ${dataPrompt}`,
     messages,
   });
 
-  return result.toAIStreamResponse();
+  return result.toTextStreamResponse();
 }
