@@ -5,7 +5,9 @@
 [![Next.js](https://img.shields.io/badge/Next.js-15-black?style=for-the-badge&logo=next.js)](https://nextjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
-[![Bright Data](https://img.shields.io/badge/Bright_Data-Scraping_Browser-blue?style=for-the-badge)](https://brightdata.com/)
+[![Bright Data Browser](https://img.shields.io/badge/Bright_Data-Scraping_Browser-blue?style=for-the-badge)](https://brightdata.com/)
+[![Bright Data SERP](https://img.shields.io/badge/Bright_Data-SERP_API-blue?style=for-the-badge)](https://brightdata.com/)
+[![Bright Data Proxies](https://img.shields.io/badge/Bright_Data-Residential_Proxies-blue?style=for-the-badge)](https://brightdata.com/)
 [![Vercel AI SDK](https://img.shields.io/badge/Vercel_AI_SDK-black?style=for-the-badge&logo=vercel)](https://sdk.vercel.ai/)
 [![Gemini 2.5 Pro](https://img.shields.io/badge/AI-Gemini_2.5_Pro-purple?style=for-the-badge)](https://deepmind.google/technologies/gemini/)
 
@@ -144,10 +146,14 @@ graph LR
 
 BuyBoxAgent leverages multiple products from the Bright Data stack to bypass scraping barriers and perform deep e-commerce intelligence:
 
-### 1. Scraping Browser 🌐
+### 1. Scraping Browser 🌐 & Residential Proxy Network 🛡️
 - **Purpose**: Bypass high-security antibot measures on Mercado Libre Mexico listings.
 - **Implementation**: Standard WebSocket secure interface (`wss://`) routing Puppeteer instructions directly to Bright Data’s cloud-hosted browsers.
-- **Value**: Resolves JS challenges, Turnstile, and device fingerprints out-of-the-box, ensuring high extraction success rates.
+- **Proxy Infrastructure**: The browser sessions automatically route traffic through Bright Data's **Residential Proxy Network**. This dynamically rotates residential IPs geolocalized in Mexico.
+- **Value & Agent Significance**: 
+  - **What it is**: A vast pool of real consumer device IPs rather than datacenter servers.
+  - **How it works**: Every navigation request looks like it comes from a genuine Mexican residential ISP (Telmex, Megacable, etc.).
+  - **Why it matters to our Agent**: It prevents IP-banning, rate-limiting, and geolocation blocks, allowing our autonomous agents to run multiple diagnostic queries continuously in the same market without being flagged as automated bots.
 - **Code Path**: [brightDataScraper.ts](file:///c:/Users/USER/Desktop/BuyBoxAgent/src/lib/scraper/brightDataScraper.ts)
 
 ### 2. SERP API 🔍
